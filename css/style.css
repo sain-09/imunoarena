@@ -1,0 +1,127 @@
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: linear-gradient(#3fa9f5 0%, #8fd3ff 55%, #fff3c4 100%);
+    color: #1d2b53; user-select: none; -webkit-user-select: none;
+  }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hidden { display: none !important; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #topwrap { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: min(92vw, 560px); }
+  #topbar { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+  .pill {
+    background: #fff; border: 3px solid #1d2b53; border-radius: 999px;
+    padding: 2px 10px; font-weight: 800; font-size: clamp(12px, 2.8vw, 16px);
+    box-shadow: 0 3px 0 #1d2b53; white-space: nowrap;
+  }
+  #timerPill { min-width: 96px; text-align: center; position: relative; overflow: hidden; }
+  #timerPill.low { background: #ffe0e0; color: #c0392b; }
+  #timerBar { position: absolute; left: 0; bottom: 0; height: 5px; background: #2ecc71; width: 100%; }
+  #timerPill.low #timerBar { background: #e74c3c; }
+  #qpanel {
+    background: rgba(255,255,255,.93); border: 3px solid #1d2b53; border-radius: 16px;
+    padding: 5px 8px; box-shadow: 0 3px 0 #1d2b53;
+  }
+  #qtext { margin: 0 0 3px; font-size: clamp(12px, 3vw, 17px); line-height: 1.15; }
+  #alts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  #alts li {
+    display: flex; align-items: center; gap: 6px; padding: 1px 4px; border-radius: 8px;
+    border: 2px solid transparent; font-size: clamp(10px, 2.5vw, 13px); line-height: 1.12;
+    transition: background .15s, border-color .15s;
+  }
+  #alts li .badge {
+    flex: 0 0 auto; width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center;
+    color: #fff; font-weight: 900; border: 2px solid #1d2b53; text-shadow: 0 1px 0 rgba(0,0,0,.4);
+  }
+  #alts li.sel { background: #fff7c2; border-color: #ff9f1a; }
+  #alts li.correct { background: #c9f7d5; border-color: #1fa84f; }
+  #alts li.wrong { background: #ffd6d6; border-color: #d63031; }
+  #status { margin-top: 3px; font-size: clamp(10px, 2.3vw, 12px); font-weight: 700; color: #3b4a7a; min-height: 1em; }
+  @media (max-width: 600px) {
+    #topwrap { width: min(94vw, 430px); top: 4px; }
+    #topbar { margin-bottom: 3px; }
+    .pill { border-width: 2px; padding: 2px 8px; box-shadow: 0 2px 0 #1d2b53; }
+    #qpanel { border-width: 2px; border-radius: 11px; padding: 4px 6px; }
+    #qtext { font-size: clamp(11px, 3.1vw, 15px); margin-bottom: 2px; }
+    #alts li { font-size: clamp(9px, 2.7vw, 12px); gap: 5px; padding: 1px 3px; }
+    #alts li .badge { width: 18px; height: 18px; border-width: 1px; font-size: 10px; }
+    #status { font-size: 10px; margin-top: 2px; }
+  }
+
+  /* ---------- Cartões (menu e resultado) ---------- */
+  .card {
+    background: #fff; border: 4px solid #1d2b53; border-radius: 22px; box-shadow: 0 6px 0 #1d2b53;
+    padding: 14px 18px; text-align: center; pointer-events: auto;
+  }
+  #menu { position: fixed; top: 3vh; left: 50%; transform: translateX(-50%); width: min(94vw, 460px); max-height: 60vh; overflow: auto; }
+  #menu h1 { margin: 0; font-size: clamp(30px, 8vw, 46px); letter-spacing: 1px; color: #e74c3c; text-shadow: 3px 3px 0 #ffc800; }
+  #menu p { margin: 4px 0 10px; font-weight: 700; }
+  #chars { display: flex; gap: 10px; justify-content: center; margin-bottom: 12px; }
+  .charBtn {
+    flex: 1; font: inherit; font-weight: 800; font-size: clamp(14px, 3.6vw, 18px); cursor: pointer;
+    padding: 8px 6px; border-radius: 14px; border: 3px solid #1d2b53; background: #eef6ff; color: #1d2b53;
+  }
+  .charBtn .em { display: block; font-size: 30px; }
+  .charBtn.active { background: #ffe066; box-shadow: 0 0 0 4px #ff9f1a inset; }
+  .bigBtn {
+    font: inherit; font-weight: 900; font-size: clamp(16px, 4vw, 22px); cursor: pointer;
+    padding: 10px 26px; border-radius: 999px; border: 3px solid #1d2b53; background: #2ecc71; color: #fff;
+    box-shadow: 0 4px 0 #1d2b53; text-shadow: 0 2px 0 rgba(0,0,0,.3);
+  }
+  .bigBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1d2b53; }
+  .bigBtn.alt { background: #3498db; font-size: clamp(13px, 3.2vw, 16px); padding: 8px 16px; }
+  #result { position: fixed; bottom: 3vh; left: 50%; transform: translateX(-50%); width: min(94vw, 460px); }
+  #result h2 { margin: 0 0 6px; font-size: clamp(22px, 6vw, 30px); }
+  #result h2.ok { color: #1fa84f; } #result h2.bad { color: #d63031; } #result h2.none { color: #e67e22; }
+  #result p { margin: 3px 0; font-size: clamp(14px, 3.6vw, 17px); font-weight: 700; }
+  #resBtns { margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  #errorMsg { position: fixed; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; font-weight: 800; }
+
+  /* ---------- Joystick ---------- */
+  #joy {
+    position: fixed; left: 18px; bottom: 24px; width: 130px; height: 130px; border-radius: 50%;
+    background: rgba(255,255,255,.35); border: 4px solid rgba(255,255,255,.9);
+    touch-action: none; display: none; pointer-events: auto;
+  }
+  #joy .knob {
+    position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px;
+    border-radius: 50%; background: #ff9f1a; border: 3px solid #1d2b53; box-shadow: 0 3px 0 #1d2b53;
+  }
+  body.touch #joy { display: block; }
+  body:not([data-phase="playing"]) #joy { display: none !important; }
+
+  #playerNames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0 12px; }
+  #playerNames input, #playerCount { width: 100%; padding: 7px; border: 1px solid #8c9eb7; border-radius: 7px; font: inherit; }
+  #playerCount { width: auto; }
+  #menu, #result, #challenge { max-height: 88dvh; overflow: auto; }
+  #challenge { position: fixed; z-index: 3; top: 52%; left: 50%; transform: translate(-50%, -50%); width: min(94vw, 500px); max-height: 66dvh; }
+  #challenge h2 { margin: 0 0 8px; font-size: clamp(18px, 4vw, 25px); }
+  #challenge p { margin: 0 0 12px; }
+  #challengeChoices { display: grid; gap: 7px; }
+  #challengeChoices button { font: inherit; cursor: pointer; border: 2px solid #263657; color: #152849; border-radius: 10px; padding: 9px; background: #eef6ff; }
+  #challengeChoices button:focus-visible { outline: 3px solid #166dd7; outline-offset: 2px; }
+  #challengeChoices.quizChoices button { text-align: left; }
+  .cellGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #challengeChoices.cellGrid button { border-radius: 50%; background: #e9caff; min-height: 44px; }
+  #challengeChoices.cellGrid button[aria-pressed="true"] { background: #ffc45e; box-shadow: inset 0 0 0 2px #794d17; }
+  #confirmTargets { margin-top: 10px; }
+  #standings small { display: block; margin-bottom: 8px; }
+  #status:empty, #alts:empty { display: none; }
+  body[data-phase="quiz"] #qpanel, body[data-phase="challenge"] #qpanel { display: none; }
+  @media (max-height: 520px) { #joy { width: 98px; height: 98px; bottom: 12px; } }
+
+  #playerName { display: block; width: 100%; padding: 10px; margin: 5px 0 12px; border: 1px solid #8c9eb7; border-radius: 8px; font: inherit; }
+  #roomPlayers { overflow-wrap: anywhere; max-height: 9rem; overflow: auto; }
+  #standings { max-height: 42dvh; overflow: auto; }
+  button:disabled { cursor: default; opacity: .65; }
+  #connection { position: fixed; z-index: 8; bottom: 0; left: 50%; transform: translateX(-50%); padding: 9px 14px; width: min(92vw, 480px); border-radius: 9px; background: #702c22; color: #fff; text-align: center; }
+  #joy { z-index: 4; left: max(14px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); user-select: none; }
+  #joy span { position: absolute; color: #172e4c; opacity: .7; font-size: 13px; pointer-events: none; }
+  #joy .joy-up { left: 50%; top: 5px; transform: translateX(-50%); }
+  #joy .joy-down { left: 50%; bottom: 5px; transform: translateX(-50%); }
+  #joy .joy-left { top: 50%; left: 5px; transform: translateY(-50%); }
+  #joy .joy-right { top: 50%; right: 5px; transform: translateY(-50%); }
+  body[data-phase="playing"] #joy { display: block; }

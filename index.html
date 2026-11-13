@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ImunoArena</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-phase="menu">
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="topwrap">
+    <div id="topbar">
+      <div class="pill">⭐ Pontos: <span id="score">0</span></div>
+      <div class="pill" id="timerPill">⏱ <span id="time">15,0</span> s<div id="timerBar"></div></div>
+    </div>
+    <div id="qpanel">
+      <h2 id="qtext"></h2>
+      <ul id="alts"></ul>
+      <div id="status"></div>
+    </div>
+  </div>
+</div>
+
+<div id="menu" class="card">
+  <h1>ImunoArena</h1>
+  <p>Entre na sala da turma para disputar as três provas no seu celular.</p>
+  <div id="chars">
+    <button class="charBtn active" data-char="male"><span class="em">👨‍⚕️</span>Enfermeiro</button>
+    <button class="charBtn" data-char="female"><span class="em">👩‍⚕️</span>Enfermeira</button>
+  </div>
+  <label for="playerName">Seu nome</label>
+  <input id="playerName" maxlength="24" autocomplete="nickname">
+  <p id="roomInfo" role="status">Conectando à sala…</p>
+  <p id="roomPlayers"></p>
+  <button class="bigBtn" id="startBtn" disabled>Entrar na sala</button>
+</div>
+
+<section id="challenge" class="card hidden" aria-labelledby="challengeTitle">
+  <h2 id="challengeTitle"></h2>
+  <p id="challengeHelp"></p>
+  <div id="challengeChoices"></div>
+  <button class="bigBtn hidden" id="confirmTargets">Confirmar alvos</button>
+</section>
+
+<section id="result" class="card hidden" aria-labelledby="resTitle">
+  <h2 id="resTitle"></h2>
+  <p id="resSummary"></p>
+  <div id="standings"></div>
+  <div id="resBtns">
+    <button class="bigBtn" id="againBtn">Iniciar prova</button>
+
+  </div>
+</section>
+
+<div id="joy" aria-label="Joystick de movimento">
+  <span class="joy-up">▲</span><span class="joy-left">◀</span><span class="joy-right">▶</span><span class="joy-down">▼</span>
+  <div class="knob" id="knob"></div>
+</div>
+<p id="connection" role="status" class="hidden"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="js/config.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/classroom.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

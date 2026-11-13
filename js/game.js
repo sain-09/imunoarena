@@ -1116,6 +1116,8 @@ const classroom = connectClassroom(handleRoom, error => {
   if (key !== activeRound) return;
   const receivedAt = performance.now();
   for (const peer of positions) {
+    const previous = livePeers.get(peer.key);
+    if (!peer.direct && previous?.direct && receivedAt-previous.receivedAt < 750) continue;
     livePeers.set(peer.key, {...peer, receivedAt, age:Math.max(0,(serverNow-peer.at)/1000)});
   }
 });

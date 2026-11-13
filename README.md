@@ -26,3 +26,5 @@ O joystick aparece nas provas com movimentação. WASD e setas também funcionam
 As corridas têm largada comum e a classificação usa o tempo de cada jogador. Os avatares dos colegas aparecem no cenário com atualização periódica e movimento interpolado. O contato entre jogadores não bloqueia o movimento. Ela foi feita para uma turma de confiança: o servidor calcula os pontos, usando os tempos de corrida e de entrada na estação registrados pelos celulares.
 
 Os três cenários ficam em models/factory.glb, models/race.glb e models/targets.glb, com texturas embutidas. js/arenas.js define os limites e as colisões correspondentes.
+
+Para salas de até 16 jogadores, o movimento tenta usar um canal direto WebRTC. Redes que bloqueiam a conexão direta e salas maiores usam a função de movimento do Netlify. Pontuação e tempos continuam na função da sala.

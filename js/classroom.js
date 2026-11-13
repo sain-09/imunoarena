@@ -12,6 +12,22 @@ function connectClassroom(onUpdate, onError, onPositions) {
   let retryAt = 0;
   let offset = 0;
   let readPosition = () => null;
+  const direct = createDirectMotion(id, peer => {
+    if (readPosition()?.round === peer.round) onPositions([{...peer,direct:true,at:0}],0,peer.round);
+  });
+  setInterval(() => direct.tick(),300);
+  let previousDirect;
+  setInterval(() => {
+    const position = document.hidden ? null : readPosition();
+    if (!position || room?.phase !== 'playing' || room.submitted) { previousDirect = null; return; }
+    const now = performance.now();
+    const old = previousDirect?.round === position.round ? previousDirect : null;
+    const dt = old ? Math.max(.02,(now-old.now)/1000) : 1;
+    const vx = old ? (position.x-old.x)/dt : 0, vz = old ? (position.z-old.z)/dt : 0;
+    const clamp = Math.min(1,10/Math.max(.001,Math.hypot(vx,vz)));
+    previousDirect = {...position,now};
+    direct.send({...position,vx:vx*clamp,vz:vz*clamp});
+  },50);
 
   async function send(action, values = {}) {
     if (busy) return false;
@@ -27,6 +43,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
       if (!response.ok) throw new Error(data.error);
       offset = data.now - (start + Date.now()) / 2;
       room = data;
+      direct.sync(data);
       if (queued && (room.id !== queued.room || room.stage !== queued.stage || room.submitted || room.phase !== 'playing')) queued = null;
       onUpdate(data);
       return true;
@@ -66,7 +83,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
     const vz = sameStage ? (position.z-previous.z)/elapsed : 0;
     const scale = Math.min(1,10/Math.max(.001,Math.hypot(vx,vz)));
     previous = { ...position, roomId, stage, sent };
-    let delay = room.players.length > 16 ? 650 : 300;
+    let delay = room.players.length > 16 ? 650 : 350;
     try {
       const response = await fetch('/.netlify/functions/movimento', {
         method:'POST', headers:{'Content-Type':'application/json'},

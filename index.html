@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ImunoArena</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -37,6 +37,21 @@
   <button class="bigBtn" id="startBtn" disabled>Entrar na sala</button>
 </div>
 
+<section id="intro" class="hidden" aria-labelledby="introTitle">
+  <div class="intro-card">
+    <div class="intro-copy">
+      <p id="introKicker"></p>
+      <h2 id="introTitle"></h2>
+      <p id="introGoal"></p>
+    </div>
+    <div class="intro-question">
+      <p id="introQuestion"></p>
+      <ol id="introChoices"></ol>
+    </div>
+    <div class="intro-footer"><span>Largada em <strong id="introCount"></strong></span><div class="intro-track"><div id="introBar"></div></div></div>
+  </div>
+</section>
+
 <section id="challenge" class="card hidden" aria-labelledby="challengeTitle">
   <h2 id="challengeTitle"></h2>
   <p id="challengeHelp"></p>
@@ -65,6 +80,8 @@
 <script src="js/config.js"></script>
 <script src="js/characters.js"></script>
 <script src="js/classroom.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/targets.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

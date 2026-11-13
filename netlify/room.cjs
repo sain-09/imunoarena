@@ -1,4 +1,5 @@
 const { randomUUID } = require('node:crypto');
+const { makeTargetPuzzle } = require('../js/targets.js');
 const config = require('../js/config.js');
 const { rankRace, scoreTargets } = require('../js/scoring.js');
 
@@ -12,7 +13,7 @@ const fail = (status, message) => Object.assign(new Error(message), { status });
 function launch(room, now) {
   room.phase = 'playing';
   room.submissions = {};
-  room.startAt = now + 5000;
+  room.startAt = now + config.introSeconds * 1000;
   room.closeAt = room.startAt + secondsFor[room.stage] * 1000 + 6000;
 }
 
@@ -51,8 +52,8 @@ function submit(room, id, body, now) {
     result.raceMs = body.raceMs;
   }
   if (stage.id === 'targets') {
-    const marks = Array.isArray(body.marks) ? body.marks.slice(0, 12).filter(n => Number.isInteger(n) && n >= 0 && n < 12) : [];
-    result.practical = scoreTargets(new Set(marks), new Set([1,4,6,9]), config.practicalPoints);
+    const marks = Array.isArray(body.marks) ? body.marks.slice(0, 20).filter(n => Number.isInteger(n) && n >= 0 && n < 20) : [];
+    result.practical = scoreTargets(new Set(marks), makeTargetPuzzle(room.id).infected, config.practicalPoints);
   }
   room.submissions[id] = result;
   return true;

@@ -72,13 +72,6 @@ function addBox(parent, w, h, d, color, x, y, z, noShadow) {
   parent.add(m);
   return m;
 }
-function addEdges(mesh) {
-  const e = new THREE.LineSegments(
-    new THREE.EdgesGeometry(mesh.geometry),
-    new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 })
-  );
-  mesh.add(e);
-}
 function canvasTexture(size, drawFn) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
@@ -105,144 +98,6 @@ function markTexture(symbol, color) {
     g.fillStyle = '#ffffff'; g.fillText(symbol, s / 2, s / 2 + 6);
   });
 }
-function checkerPlane(w, d) {
-  const tex = canvasTexture(128, (g, s) => {
-    g.fillStyle = '#4cd137'; g.fillRect(0, 0, s, s);
-    g.fillStyle = '#3fbf2f'; g.fillRect(0, 0, s / 2, s / 2); g.fillRect(s / 2, s / 2, s / 2, s / 2);
-  });
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(w / 4, d / 4);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ map: tex }));
-  m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true;
-  return m;
-}
-function makeIsland(x, topY, z, w, d, baseH) {
-  const g = new THREE.Group();
-  addBox(g, w, 0.5, d, 0x3dbb3a, 0, -0.25, 0, true);
-  g.add(checkerPlane(w, d));
-  addBox(g, w * 0.96, baseH, d * 0.96, 0x9a5b2e, 0, -0.5 - baseH / 2, 0, true);
-  g.position.set(x, topY, z);
-  scene.add(g);
-  return g;
-}
-
-/* =====================================================================
-   Elementos decorativos (estáticos)
-   ===================================================================== */
-
-function makeVirus(r, color) {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), lambert(color));
-  body.castShadow = true; g.add(body);
-  const spikeCol = 0xffd32a;
-  const ico = new THREE.IcosahedronGeometry(1, 0).attributes.position;
-  const seen = new Set();
-  const up = new THREE.Vector3(0, 1, 0);
-  for (let i = 0; i < ico.count; i++) {
-    const v = new THREE.Vector3().fromBufferAttribute(ico, i).normalize();
-    const key = v.toArray().map(n => n.toFixed(3)).join(',');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(r * 0.22, r * 0.6, 8), lambert(color));
-    spike.position.copy(v).multiplyScalar(r + r * 0.22);
-    spike.quaternion.setFromUnitVectors(up, v);
-    spike.castShadow = true; g.add(spike);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(r * 0.13, 8, 8), lambert(spikeCol));
-    tip.position.copy(v).multiplyScalar(r + r * 0.6);
-    g.add(tip);
-  }
-  // olhinhos de desenho animado
-  [-1, 1].forEach(s => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(r * 0.2, 12, 10), lambert(0xffffff));
-    eye.position.set(s * r * 0.32, r * 0.2, r * 0.82); g.add(eye);
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(r * 0.09, 8, 8), lambert(0x111111));
-    pupil.position.set(s * r * 0.32, r * 0.2, r * 0.82 + r * 0.16); g.add(pupil);
-  });
-  return g;
-}
-
-function makeSyringe() {
-  const g = new THREE.Group();
-  const mk = (geo, color, x, y, z) => {
-    const m = new THREE.Mesh(geo, lambert(color)); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m;
-  };
-  mk(new THREE.CylinderGeometry(0.38, 0.38, 2.2, 16), 0xffffff, 0, 0, 0);          // corpo
-  mk(new THREE.CylinderGeometry(0.3, 0.3, 1.5, 16), 0xe74c3c, 0, -0.3, 0);         // líquido
-  mk(new THREE.BoxGeometry(1.3, 0.14, 0.45), 0x2e86de, 0, 1.1, 0);                 // aba
-  mk(new THREE.CylinderGeometry(0.1, 0.1, 1.3, 10), 0xbdc3c7, 0, 1.7, 0);          // haste
-  mk(new THREE.CylinderGeometry(0.42, 0.42, 0.12, 16), 0x2e86de, 0, 2.4, 0);       // botão
-  mk(new THREE.CylinderGeometry(0.12, 0.3, 0.4, 12), 0x2e86de, 0, -1.3, 0);        // conector
-  mk(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 8), 0xdfe6e9, 0, -2.05, 0);       // agulha
-  return g;
-}
-
-function makeCross(size) {
-  const g = new THREE.Group();
-  addBox(g, size, size, 0.18, 0xffffff, 0, 0, 0);
-  addBox(g, size * 0.72, size * 0.24, 0.22, 0xe74c3c, 0, 0, 0.02, true);
-  addBox(g, size * 0.24, size * 0.72, 0.22, 0xe74c3c, 0, 0, 0.02, true);
-  return g;
-}
-
-function makeBlock(size, color) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), lambert(color));
-  m.castShadow = true; m.receiveShadow = true; addEdges(m);
-  return m;
-}
-
-function buildDecor() {
-  // Parede de fundo
-  addBox(scene, 24, 9, 2, 0x7d5fff, 0, 4.5, -13.9);
-  addBox(scene, 24, 0.8, 2.2, 0xffc800, 0, 9.2, -13.9);
-  // Blocos coloridos ao longo das bordas laterais da plataforma
-  const blockColors = [0xff9f1a, 0xe74c3c, 0xffd32a, 0x1e90ff, 0x2ecc71];
-  [-10.3, 10.3].forEach((x, side) => {
-    [11, 8, 5, 2, -1, -4].forEach((z, i) => {
-      const b = makeBlock(1, blockColors[(i + side * 2) % blockColors.length]);
-      b.position.set(x, 0.5, z); scene.add(b);
-      if (i % 3 === 0) {
-        const b2 = makeBlock(1, blockColors[(i + side * 2 + 1) % blockColors.length]);
-        b2.position.set(x, 1.5, z); scene.add(b2);
-      }
-    });
-  });
-
-  // Ilhas flutuantes
-  const iL1 = makeIsland(-16, 0, 6, 5, 5, 1.6);
-  const syr1 = makeSyringe(); syr1.scale.setScalar(0.9); syr1.position.set(1, 2.2, 0.5); syr1.rotation.z = 0.35; iL1.add(syr1);
-  const v1 = makeVirus(0.9, 0x8e44ad); v1.position.set(-1, 1.2, -0.5); iL1.add(v1);
-
-  const iR1 = makeIsland(16, 0, -2, 5, 5, 1.6);
-  const v2 = makeVirus(0.9, 0x27ae60); v2.position.set(0.8, 1.2, 0.5); iR1.add(v2);
-  [[-1.2, 0.5, -1.2, 0xe74c3c], [-1.2, 0.5, 0, 0xffd32a], [-1.2, 1.5, -0.6, 0x1e90ff]].forEach(a => {
-    const b = makeBlock(1, a[3]); b.position.set(a[0], a[1], a[2]); iR1.add(b);
-  });
-
-  const iL2 = makeIsland(-17, 2, -8, 4, 4, 1.4);
-  [[-0.8, 0.5, 0.6, 0xff9f1a], [0.4, 0.5, 0.6, 0x2ecc71], [-0.2, 1.5, 0.6, 0xe74c3c]].forEach(a => {
-    const b = makeBlock(1, a[3]); b.position.set(a[0], a[1], a[2]); iL2.add(b);
-  });
-  const c1 = makeCross(1.6); c1.position.set(0.8, 2.6, -1); iL2.add(c1);
-
-  const iR2 = makeIsland(17, 1.5, 10, 4, 4, 1.4);
-  const syr2 = makeSyringe(); syr2.scale.setScalar(0.8); syr2.position.set(-0.8, 2, 0); syr2.rotation.z = -0.4; iR2.add(syr2);
-  const v3 = makeVirus(0.8, 0xe74c3c); v3.position.set(0.9, 1.1, 0.4); iR2.add(v3);
-
-
-}
-
-/* =====================================================================
-   Plataforma e portas
-   ===================================================================== */
-function buildPlatform() {
-  const g = new THREE.Group();
-  addBox(g, 22, 0.6, 30, 0x3dbb3a, 0, -0.3, 0, true);
-  g.add(checkerPlane(22, 30));
-  addBox(g, 21.2, 3, 29.2, 0x9a5b2e, 0, -2.1, 0, true);
-  addBox(g, 21.4, 0.4, 29.4, 0xc98a4b, 0, -1.0, 0, true);
-  scene.add(g);
-}
-
 const doors = [];
 const factory = new THREE.Group();
 const antibodies = new THREE.Group();
@@ -263,12 +118,6 @@ function buildDoors() {
     mkFrame(0.9, 5.2, 1.2, 1.45, 2.6, 0);
     mkFrame(3.8, 1.0, 1.2, 0, 5.7, 0);
     addBox(g, 2.3, 5.2, 0.3, 0x2d1e5f, 0, 2.6, -0.4, true);
-
-    const badge = new THREE.Mesh(
-      new THREE.CircleGeometry(0.85, 32),
-      new THREE.MeshBasicMaterial({ map: letterTexture(def.letter, def.css, true), transparent: true })
-    );
-    badge.position.set(0, 7.05, 0.35); g.add(badge);
 
     // Área de seleção no chão
     const padMat = lambert(def.color, { emissive: def.color });
@@ -291,7 +140,7 @@ function buildDoors() {
 
     // Marca ✓ / ✗ (revelada só no fim)
     const mark = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true }));
-    mark.scale.set(2.4, 2.4, 1); mark.position.set(def.x, 9.6, DOOR_Z + 0.5); mark.visible = false; factory.add(mark);
+    mark.scale.set(1.5, 1.5, 1); mark.position.set(def.x, 5.1, DOOR_Z + 1.4); mark.visible = false; factory.add(mark);
 
     doors.push({ frameMat, padMat, beam, mark });
   });
@@ -447,7 +296,6 @@ function resetInput() { keys.clear(); releaseJoy(); }
 /* =====================================================================
    HUD
    ===================================================================== */
-const race = new THREE.Group();
 const raceAvatar = new THREE.Group();
 const disk = new THREE.Mesh(new THREE.TorusGeometry(.66, .33, 12, 28), lambert(0xea293d));
 disk.rotation.x = Math.PI / 2;
@@ -464,12 +312,18 @@ raceAvatar.add(oxygen);
 scene.add(raceAvatar);
 raceAvatar.visible = false;
 const raceFinishZ = -10.5;
-const barriers = [
-  { x: -3.5, z: 6, width: 12 },
-  { x: 4, z: 0, width: 11 },
-  { x: -4.4, z: -6, width: 10 }
-];
-const cellMarkers = ['◆', '▲', '●', '■', '▲', '◆', '▲', '●', '■', '▲', '◆', '●'];
+const organWorld = makeOrganWorld(THREE, canvasTexture);
+for (const group of Object.values(organWorld.scenes)) scene.add(group);
+function showMap(id) {
+  for (const [key, group] of Object.entries(organWorld.scenes)) group.visible = key === id;
+  const palette = organWorld.palettes[id];
+  scene.background = new THREE.Color(palette.bg);
+  scene.fog = new THREE.FogExp2(palette.fog, .023);
+  factory.visible = id === 'factory';
+  raceAvatar.visible = id === 'race';
+  player.group.visible = id === 'factory';
+}
+let raceTime = 0;
 let room;
 let played;
 let scheduled = null;
@@ -492,48 +346,51 @@ function updateClock(now) {
   $('timerPill').classList.toggle('low', state.remaining <= 5);
 }
 
-function buildRace() {
-  scene.add(race);
-  race.visible = false;
-  addBox(race, 20, .08, 28, 0xb83857, 0, .02, .5, true);
-  addBox(race, .35, 1.4, 28, 0x9b2549, -9.85, .7, .5);
-  addBox(race, .35, 1.4, 28, 0x9b2549, 9.85, .7, .5);
-  const geometry = new THREE.SphereGeometry(1, 16, 12);
-  const red = lambert(0xe84252);
-  for (const wall of barriers) {
-    addBox(race, wall.width, .65, 1.25, 0x922344, wall.x, .325, wall.z);
-    for (let i = -wall.width / 2 + .7; i < wall.width / 2; i += 1.3) {
-      const cell = new THREE.Mesh(geometry, red);
-      cell.scale.set(.68, .36, .59);
-      cell.position.set(wall.x + i, .74, wall.z);
-      race.add(cell);
-    }
-  }
-  for (let i = -9; i <= 9; i++) {
-    addBox(race, 1, .1, 1.15, i % 2 ? 0xf6fcff : 0x322045, i, .08, raceFinishZ, true);
-  }
-  for (const [label, z, color] of [['Pulmões · O₂', 10, '#195a9a'], ['Músculo · Entrega', -12, '#75264b']]) {
-    const map = canvasTexture(256, (ctx, size) => {
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 60, size, 136);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, 128, 139);
-    });
-    const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent: true }));
-    sign.scale.set(4, 4, 1);
-    sign.position.set(0, 2.6, z);
-    race.add(sign);
-  }
+function blocked(x, z, id) {
+  if (id === 'factory') return FACTORY_DIVIDERS.some(obstacle => hitsObstacle(x,z,obstacle));
+  return VESSEL_WALLS.some(obstacle => hitsObstacle(x,z,obstacle)) ||
+    VESSEL_GATES.some(gate => hitsObstacle(x,z,gate,vesselGateX(gate,raceTime)));
 }
 
-function raceBlocked(x, z) {
-  return barriers.some(wall =>
-    Math.abs(x - wall.x) < wall.width / 2 + .36 && Math.abs(z - wall.z) < 1.02);
+function hideIntro() {
+  $('intro').classList.add('hidden');
+}
+
+function showIntro() {
+  const stage = currentStage();
+  showMap(stage.id);
+  player.x = START_POS.x;
+  player.z = START_POS.z;
+  player.facing = Math.PI;
+  state.selected = -1;
+  if (stage.id === 'factory') refreshSelection();
+  setPhase('intro');
+  $('menu').classList.add('hidden');
+  for (const id of ['result','hud','challenge']) $(id).classList.add('hidden');
+  $('intro').dataset.theme = stage.id;
+  $('introKicker').textContent = 'Prova ' + (room.stage + 1) + ' de ' + CONFIG.stages.length;
+  $('introTitle').textContent = stage.title;
+  $('introQuestion').textContent = stage.text;
+  $('introGoal').textContent = stage.goal;
+  const choices = $('introChoices');
+  choices.replaceChildren();
+  stage.options.forEach((text,i) => {
+    const item = document.createElement('li');
+    item.textContent = DOOR_DEFS[i].letter + ' · ' + text;
+    choices.append(item);
+  });
+  updateIntro();
+  $('intro').classList.remove('hidden');
+}
+
+function updateIntro() {
+  const remaining = Math.max(0, room.startAt - classroom.now());
+  $('introCount').textContent = Math.ceil(remaining / 1000) || 'Vai!';
+  $('introBar').style.transform = 'scaleX(' + Math.min(1, remaining / (CONFIG.introSeconds * 1000)) + ')';
 }
 
 function waitForScores() {
+  hideIntro();
   setPhase('waiting');
   $('hud').classList.add('hidden');
   $('challenge').classList.add('hidden');
@@ -563,8 +420,8 @@ function handleRoom(updated) {
     $('roomPlayers').textContent = room.players.map(player => player.name).join(' · ');
     $('startBtn').textContent = room.joined ? 'Começar campeonato' : 'Entrar na sala';
     $('startBtn').disabled = room.joined && !room.host;
-    race.visible = raceAvatar.visible = false;
-    player.group.visible = factory.visible = true;
+    hideIntro();
+    showMap('factory');
     player.x = START_POS.x;
     player.z = START_POS.z;
     state.selected = -1;
@@ -592,8 +449,7 @@ function handleRoom(updated) {
 
   const key = room.id + '/' + room.stage;
   if (played === key || scheduled !== null) return;
-  waitForScores();
-  $('resSummary').textContent = 'Prepare-se. A prova começa para toda a turma em instantes.';
+  if (room.startAt > classroom.now()) showIntro();
   scheduled = setTimeout(() => {
     scheduled = null;
     if (room.phase !== 'playing' || room.id + '/' + room.stage !== key || room.submitted) return;
@@ -603,6 +459,7 @@ function handleRoom(updated) {
 }
 
 function startTurn() {
+  hideIntro();
   resetInput();
   state.selected = -1;
   state.selectedAt = null;
@@ -612,10 +469,8 @@ function startTurn() {
   player.z = START_POS.z;
   player.facing = player.faceTarget = Math.PI;
   const id = currentStage().id;
-  factory.visible = id === 'factory';
-  race.visible = id === 'race';
-  player.group.visible = id !== 'race';
-  raceAvatar.visible = id === 'race';
+  raceTime = 0;
+  showMap(id);
   $('result').classList.add('hidden');
   $('hud').classList.remove('hidden');
   $('score').textContent = total(room.players.find(player => player.me));
@@ -644,7 +499,7 @@ function startTurn() {
     setClock(CONFIG.roundSeconds);
     state.deadline = performance.now() + room.startAt + CONFIG.roundSeconds * 1000 - classroom.now();
   } else {
-    $('status').textContent = 'Leve o O₂ até o músculo. Contorne as fileiras de hemácias e cruze a faixa.';
+    $('status').textContent = 'Contorne as fileiras, atravesse as passagens móveis e entregue o O₂ ao músculo.';
     setClock(CONFIG.raceSeconds);
     state.deadline = performance.now() + room.startAt + CONFIG.raceSeconds * 1000 - classroom.now();
   }
@@ -674,16 +529,22 @@ function updateSelection() {
 
 function showTargets() {
   setPhase('challenge');
+  const puzzle = makeTargetPuzzle(room.id);
   $('challenge').classList.remove('hidden');
   $('challengeTitle').textContent = 'Reconheça as células infectadas';
-  $('challengeHelp').textContent = 'O fragmento viral tem a forma ▲. Marque as células que exibem esse fragmento.';
+  $('challengeHelp').textContent = 'Procure o fragmento ' + puzzle.marker + '. Toque apenas nas células que exibem esse marcador.';
   $('confirmTargets').classList.remove('hidden');
   const grid = $('challengeChoices');
   grid.className = 'cellGrid';
   grid.replaceChildren();
-  cellMarkers.forEach((marker, index) => {
+  puzzle.cells.forEach((marker, index) => {
     const cell = document.createElement('button');
-    cell.textContent = marker;
+    const nucleus = document.createElement('span');
+    nucleus.className = 'cell-nucleus';
+    const receptor = document.createElement('span');
+    receptor.className = 'cell-receptor';
+    receptor.textContent = marker;
+    cell.append(nucleus, receptor);
     cell.setAttribute('aria-label', 'Célula ' + (index + 1) + ', marcador ' + marker);
     cell.setAttribute('aria-pressed', 'false');
     cell.addEventListener('click', () => {
@@ -735,13 +596,12 @@ function total(competitor) {
   return competitor.results.reduce((sum, result) => sum + result.practical + result.quiz, 0);
 }
 function showStandings(stage) {
+  hideIntro();
   setPhase('result');
   $('hud').classList.add('hidden');
   $('challenge').classList.add('hidden');
   $('result').classList.remove('hidden');
-  factory.visible = stage.id === 'factory';
-  race.visible = raceAvatar.visible = stage.id === 'race';
-  player.group.visible = stage.id !== 'race';
+  showMap(stage.id);
   const final = state.stageIndex === CONFIG.stages.length - 1;
   $('resTitle').textContent = final ? 'Placar final' : 'Resultado · ' + stage.title;
   $('resSummary').textContent = stage.correct + ' · ' + stage.explanation;
@@ -786,9 +646,10 @@ function movePlayer(dt) {
     player.z += iz * CONFIG.moveSpeed * dt;
     player.x = Math.min(PLAYER_MAX.x, Math.max(PLAYER_MIN.x, player.x));
     player.z = Math.min(PLAYER_MAX.z, Math.max(PLAYER_MIN.z, player.z));
-    if (currentStage().id === 'race') {
-      if (raceBlocked(player.x, oldZ)) player.x = oldX;
-      if (raceBlocked(player.x, player.z)) player.z = oldZ;
+    {
+      const id = currentStage().id;
+      if (blocked(player.x, oldZ, id)) player.x = oldX;
+      if (blocked(player.x, player.z, id)) player.z = oldZ;
       if (player.x === oldX && player.z === oldZ) return 0;
     }
     player.faceTarget = Math.atan2(ix, iz);
@@ -836,8 +697,10 @@ function updateCamera(dt) {
     camGoalLook.set(0, 1.9, player.z);
   } else {
     const fx = player.x * 0.7;
-    camGoalPos.set(fx, 10, player.z + 13);
-    camGoalLook.set(fx, 1.5, player.z - 7);
+    const compactLandscape = camera.aspect > 1.25 && window.innerHeight < 600;
+    const tissue = currentStage().id === 'targets';
+    camGoalPos.set(tissue ? 0 : fx, compactLandscape ? 12 : 10, tissue ? 21 : player.z + 13);
+    camGoalLook.set(tissue ? 0 : fx, 1.5, tissue ? -1 : player.z - 7);
   }
   const k = 1 - Math.pow(0.002, dt);
   camPos.lerp(camGoalPos, k);
@@ -855,8 +718,10 @@ function frame() {
   const t = nowMs / 1000;
 
   let moving = 0;
+  if (state.phase === 'intro') updateIntro();
   if (state.phase === 'playing') {
     updateClock(nowMs);
+    if (currentStage().id === 'race') raceTime = Math.max(0, state.duration - state.remaining);
     if (state.remaining > 0) {
       moving = movePlayer(dt);
       if (currentStage().id === 'factory') updateSelection();
@@ -887,6 +752,7 @@ function frame() {
     raceAvatar.rotation.z = moving ? Math.sin(t * 12) * .1 : 0;
   }
   updateCamera(dt);
+  organWorld.update(t, raceTime);
   renderer.render(scene, camera);
 }
 
@@ -911,7 +777,6 @@ window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
 /* =====================================================================
    Inicialização
    ===================================================================== */
-buildPlatform();
 buildDoors();
 const correctMark = markTexture('✓', '#1b8c53');
 for (const door of doors) door.mark.material.map = correctMark;
@@ -927,9 +792,8 @@ for (let i = 0; i < 3; i++) {
   antibodies.add(antibody);
 }
 antibodies.visible = false;
-buildDecor();
-buildRace();
 setCharacter('male');
+showMap('factory');
 onResize();
 
 document.querySelectorAll('.charBtn').forEach(btn => {

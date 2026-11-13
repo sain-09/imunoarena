@@ -426,6 +426,9 @@ function removePeer(key, avatar) {
   remoteAvatars.delete(key);
 }
 let raceTime = 0;
+let checkpoint = 0;
+let slowUntil = 0;
+let revealStarted = 0;
 let room;
 let played;
 let scheduled = null;
@@ -579,6 +582,10 @@ function startTurn() {
   state.selected = -1;
   state.selectedAt = null;
   state.raceMs = null;
+  checkpoint = 0;
+  slowUntil = 0;
+  revealStarted = 0;
+  $('fragmentPanel').classList.add('hidden');
   state.marks.clear();
   player.x = START_POS.x;
   player.z = ARENAS[currentStage().id].start;
@@ -591,6 +598,7 @@ function startTurn() {
   $('score').textContent = total(room.players.find(player => player.me));
   $('alts').replaceChildren();
   altEls.length = 0;
+  $('qpanel').classList.remove('station-locked','race-slow');
   $('qtext').textContent = currentStage().title;
   $('status').textContent = '';
   if (id === 'targets') {
@@ -628,8 +636,9 @@ function refreshSelection() {
     door.beam.visible = active;
     door.mark.visible = false;
   });
+  $('qpanel').classList.toggle('station-locked', activeMap === 'factory' && state.selected >= 0);
   $('status').textContent = state.selected < 0 ? 'Entre na área da estação da sua resposta.'
-    : 'Estação ' + DOOR_DEFS[state.selected].letter + ' selecionada. Você pode trocar até o tempo acabar.';
+    : DOOR_DEFS[state.selected].letter + ' selecionada · Você pode trocar até o sinal.';
 }
 function updateSelection() {
   const zone = player.z <= ZONE_MAX_Z
@@ -645,14 +654,18 @@ function showTargets() {
   setPhase('playing');
   const puzzle = makeTargetPuzzle(room.id);
   $('qtext').textContent = 'Recife celular';
-  state.fragment = puzzle.marker;
+  const icon = symbolTexture(puzzle.marker,'#24464e');
+  $('fragmentIcon').src = icon.image.toDataURL();
+  icon.dispose();
+  $('fragmentName').textContent = puzzle.marker;
+  $('fragmentPanel').classList.remove('hidden');
   $('status').textContent = 'Fragmento ' + puzzle.marker + ' · Aproxime-se de uma célula para inspecioná-la.';
   puzzle.cells.forEach((symbol,index) => {
     const [x,z] = CELL_PODS[index];
     const map = symbolTexture(symbol,'#24464e');
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent:true, depthTest:false }));
-    sprite.position.set(x,2,z);
-    sprite.scale.set(1.55,1.55,1);
+    sprite.position.set(x,.49,z+1.10);
+    sprite.scale.set(.65,.65,1);
     sprite.visible = false;
     scene.add(sprite);
     markers.push({sprite,x,z,index,symbol,reveal:0,pulse:0});
@@ -670,7 +683,7 @@ function scanCells() {
     marker.sprite.material.color.setHex(state.marks.has(marker.index) ? 0xffc66d : 0xffffff);
     if(distance < nearestDistance) { nearestDistance = distance; nearestCell = marker; }
   }
-  $('status').textContent = 'Fragmento ' + state.fragment + ' · ' + state.marks.size + ' células marcadas';
+  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + ' células marcadas';
   const button = $('scanCell');
   button.disabled = !nearestCell;
   button.textContent = nearestCell && state.marks.has(nearestCell.index) ? 'Desmarcar' : 'Marcar célula';
@@ -746,7 +759,7 @@ function showStandings(stage) {
     const correctDoor = doors[DOOR_DEFS.findIndex(door => door.letter === stage.correct)];
     for (const door of doors) door.beam.visible = door === correctDoor;
     correctDoor.mark.visible = true;
-    antibodies.position.x = DOOR_DEFS.find(door => door.letter === stage.correct).x;
+    if (!revealStarted) revealStarted = performance.now();
     antibodies.visible = true;
   }
   const board = $('standings');
@@ -757,9 +770,13 @@ function showStandings(stage) {
     const line = document.createElement('p');
     const detail = stage.id === 'race' ? (entry.place ? entry.place + 'º · ' + (entry.raceMs / 1000).toFixed(2) + ' s · ' : 'Sem chegada · ') : '';
     const score = stage.id === 'factory' ? entry.quiz + ' pela estação' : entry.practical + ' na prova + ' + entry.quiz + ' na pergunta';
+    const report = entry.inspection;
+    const inspection = stage.id === 'targets' && report
+      ? ' · ' + report.hits + ' acertos, ' + report.errors + ' saudáveis marcadas, ' + report.missed + ' alvos restantes'
+      : '';
     line.textContent = competitor.name + ' · ' + total(competitor) + ' pontos';
     const breakdown = document.createElement('small');
-    breakdown.textContent = detail + score + ' · Resposta ' + (entry.answer || 'em branco');
+    breakdown.textContent = detail + score + ' · Resposta ' + (entry.answer || 'em branco') + inspection;
     board.append(line, breakdown);
   }
   $('againBtn').textContent = final ? 'Abrir novo campeonato' : 'Próxima prova';
@@ -779,13 +796,18 @@ function movePlayer(dt) {
 
   if (mag > 0) {
     const oldX = player.x, oldZ = player.z;
-    player.x += ix * CONFIG.moveSpeed * dt;
-    player.z += iz * CONFIG.moveSpeed * dt;
+    const speed = CONFIG.moveSpeed * (performance.now() < slowUntil ? .57 : 1);
+    player.x += ix * speed * dt;
+    player.z += iz * speed * dt;
     const bounds = ARENAS[activeMap];
     player.x = Math.min(bounds.width, Math.max(-bounds.width, player.x));
     player.z = Math.min(bounds.start+2, Math.max(bounds.end-1, player.z));
     {
       const id = currentStage().id;
+      if (id === 'race' && GATES.some(gate => inside(player.x,player.z,[gateX(gate,raceTime),gate.z,2.7,1.5]))) {
+        const now = performance.now();
+        if (now >= slowUntil) slowUntil = now + 520;
+      }
       if (blocked(player.x, oldZ, id)) player.x = oldX;
       if (blocked(player.x, player.z, id)) player.z = oldZ;
       if (player.x === oldX && player.z === oldZ) return 0;
@@ -934,7 +956,9 @@ function animateArenaEffects(dt, time) {
     const wave = Math.cos(raceTime*1.55+GATES[index].phase);
     for (const lamp of pair) {
       lamp.visible = activeMap === 'race' && playing;
-      lamp.material.opacity = motion ? .45+.55*Math.abs(wave) : .8;
+      const warning = gateWarning(GATES[index],raceTime);
+      lamp.material.color.setHex(warning ? 0xffbd58 : 0x80e8eb);
+      lamp.material.opacity = motion ? .54+.44*Math.abs(wave) : .9;
       lamp.scale.setScalar(motion ? 1.15+.40*Math.abs(wave) : 1);
     }
   });
@@ -946,9 +970,15 @@ function animateArenaEffects(dt, time) {
       }
     }
     if (antibodies.visible) {
+      const progress = motion ? Math.min(1,(performance.now()-revealStarted)/1250) : 1;
+      const ease = progress*progress*(3-2*progress);
+      const answerX = DOOR_DEFS.find(door => door.letter === currentStage().correct).x;
+      antibodies.position.set(answerX+(10.3-answerX)*ease, Math.sin(progress*Math.PI)*1.1, (-8.35-(DOOR_Z+1))*ease);
       antibodies.children.forEach((part,i) => {
-        part.position.y = 3.4+(i%2)*.9+(motion ? Math.sin(time*3+i*.7)*.24 : 0);
-        part.rotation.z = motion ? Math.sin(time*2.6+i)*.17 : 0;
+        part.position.x = (i-1)*.85*(1-ease);
+        part.position.y = (3.4+(i%2)*.9)*(1-ease) + 1.68*ease;
+        part.rotation.z = (i-1)*.44*(1-ease);
+        part.scale.setScalar(i===1 ? 1-.36*ease : Math.max(.001,1-ease));
       });
     }
   }
@@ -956,10 +986,10 @@ function animateArenaEffects(dt, time) {
     marker.reveal += ((marker.sprite.visible ? 1 : 0)-marker.reveal)*(1-Math.exp(-16*dt));
     marker.pulse = Math.max(0,marker.pulse-dt*3.1);
     const pulse = Math.sin(Math.PI*marker.pulse);
-    const scale = motion ? 1.55*(.69+.31*marker.reveal+.25*pulse) : 1.55;
+    const scale = motion ?  .65*(.69+.31*marker.reveal+.25*pulse) : .65;
     marker.sprite.material.opacity = motion ? marker.reveal : 1;
     marker.sprite.scale.set(scale,scale,1);
-    marker.sprite.position.y = 2+(motion ? .12*Math.sin(time*3+marker.index)+pulse*.13 : 0);
+    marker.sprite.position.y = .49+(motion ? pulse*.15 : 0);
   }
 }
 
@@ -983,7 +1013,12 @@ function frame() {
       if (activeMap === 'race') {
         const bounds = ARENAS.race;
         const percent = Math.max(0, Math.min(100, Math.floor(100*(bounds.start-player.z)/(bounds.start-bounds.end))));
-        $('status').textContent = 'Entregue o O₂ · ' + percent + '% do percurso';
+        if (checkpoint < RACE_CHECKPOINTS.length && player.z <= RACE_CHECKPOINTS[checkpoint]) checkpoint++;
+        const section = player.z > -15 ? 'Slalom dos pulmões'
+          : player.z > -68 ? 'Bloqueadores do vaso'
+          : 'Laranja: atalho estreito · Azul: contorno largo';
+        $('status').textContent = section + ' · ' + percent + '% · Postos ' + checkpoint + '/' + RACE_CHECKPOINTS.length;
+        $('qpanel').classList.toggle('race-slow',nowMs < slowUntil);
       }
       if (activeMap === 'race' && player.z <= ARENAS.race.end) {
         state.raceMs = Math.max(1, Math.round(nowMs - (state.deadline - state.duration * 1000)));

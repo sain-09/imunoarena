@@ -21,7 +21,8 @@ function launch(room, now) {
 function settle(room, now) {
   if (room.phase !== 'playing' || (now < room.closeAt && room.players.some(p => !room.submissions[p.id]))) return false;
   const results = room.players.map(player => room.submissions[player.id] || {
-    answer: null, raceMs: null, place: null, practical: 0, quiz: 0
+    answer: null, raceMs: null, place: null, practical: 0, quiz: 0,
+    ...(config.stages[room.stage].id === 'targets' ? {inspection:{hits:0,errors:0,missed:makeTargetPuzzle(room.id).infected.size}} : {})
   });
   if (config.stages[room.stage].id === 'race') rankRace(results, config.racePlaces);
   room.players.forEach((player, i) => player.results.push(results[i]));
@@ -54,7 +55,11 @@ function submit(room, id, body, now) {
   }
   if (stage.id === 'targets') {
     const marks = Array.isArray(body.marks) ? body.marks.slice(0, 20).filter(n => Number.isInteger(n) && n >= 0 && n < 20) : [];
-    result.practical = scoreTargets(new Set(marks), makeTargetPuzzle(room.id).infected, config.practicalPoints);
+    const marked = new Set(marks);
+    const infected = makeTargetPuzzle(room.id).infected;
+    const hits = [...marked].filter(index => infected.has(index)).length;
+    result.inspection = { hits, errors:marked.size-hits, missed:infected.size-hits };
+    result.practical = scoreTargets(marked, infected, config.practicalPoints);
   }
   room.submissions[id] = result;
   return true;

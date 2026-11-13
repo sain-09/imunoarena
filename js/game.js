@@ -480,7 +480,15 @@ function showIntro() {
 
 function updateIntro() {
   const remaining = Math.max(0, room.startAt - classroom.now());
-  $('introCount').textContent = Math.ceil(remaining / 1000) || 'Vai!';
+  const count = String(Math.ceil(remaining / 1000) || 'Vai!');
+  const counter = $('introCount');
+  if (counter.textContent !== count) {
+    counter.textContent = count;
+    if (!reducedMotion.matches && counter.animate) {
+      counter.animate([{transform:'scale(.82)'},{transform:'scale(1.18)',offset:.48},{transform:'scale(1)'}],
+        {duration:330,easing:'ease-out'});
+    }
+  }
   $('introBar').style.transform = 'scaleX(' + Math.min(1, remaining / (CONFIG.introSeconds * 1000)) + ')';
 }
 
@@ -647,7 +655,7 @@ function showTargets() {
     sprite.scale.set(1.55,1.55,1);
     sprite.visible = false;
     scene.add(sprite);
-    markers.push({sprite,x,z,index,symbol});
+    markers.push({sprite,x,z,index,symbol,reveal:0,pulse:0});
   });
   setClock(CONFIG.targetSeconds);
   state.deadline = performance.now() + room.startAt + CONFIG.targetSeconds * 1000 - classroom.now();
@@ -672,6 +680,7 @@ function toggleCell() {
   const index = nearestCell.index;
   if(state.marks.has(index)) state.marks.delete(index);
   else state.marks.add(index);
+  nearestCell.pulse = 1;
   scanCells();
 }
 function confirmTargets() {
@@ -866,6 +875,94 @@ function updateCamera(dt) {
   camera.lookAt(camLook);
 }
 
+const atmosphere = {};
+const gateSignals = [];
+const particleMap = canvasTexture(32, (ctx,size) => {
+  const glow = ctx.createRadialGradient(size/2,size/2,1,size/2,size/2,size/2);
+  glow.addColorStop(0,'#fff');
+  glow.addColorStop(.36,'rgba(255,255,255,.8)');
+  glow.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0,0,size,size);
+});
+for (const [id, color] of [['factory',0xffd88e],['race',0x89f1ff],['targets',0x83ffcf]]) {
+  const {width,start,end} = ARENAS[id];
+  const points = new Float32Array(30*3);
+  for (let i=0;i<30;i++) {
+    points[i*3] = (i%2 ? 1 : -1)*(width-.35+(i%4)*.29);
+    points[i*3+1] = .65 + (i%5)*.31;
+    points[i*3+2] = end+(i+.4)*(start-end)/30;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.BufferAttribute(points.slice(),3));
+  const material = new THREE.PointsMaterial({color,map:particleMap,size:.30,transparent:true,opacity:.74,depthWrite:false});
+  const cloud = new THREE.Points(geometry,material);
+  cloud.frustumCulled = false;
+  scene.add(cloud);
+  atmosphere[id] = {cloud,points};
+}
+
+const signalGeometry = new THREE.RingGeometry(.16,.29,20);
+for (const gate of GATES) {
+  const pair = [-1,1].map(side => {
+    const lamp = new THREE.Mesh(signalGeometry,new THREE.MeshBasicMaterial({
+      color:0xffdb72,transparent:true,depthWrite:false,side:THREE.DoubleSide
+    }));
+    lamp.rotation.x = -Math.PI/2;
+    lamp.position.set(gate.x+side*3.32,.41,gate.z);
+    scene.add(lamp);
+    return lamp;
+  });
+  gateSignals.push(pair);
+}
+
+function animateArenaEffects(dt, time) {
+  const motion = !reducedMotion.matches;
+  const playing = state.phase === 'playing';
+  for (const [id,{cloud,points}] of Object.entries(atmosphere)) {
+    cloud.visible = activeMap === id && motion;
+    if (!cloud.visible) continue;
+    const positions = cloud.geometry.attributes.position;
+    for (let i=0;i<positions.count;i++) {
+      const j=i*3;
+      positions.setXYZ(i,points[j]+Math.sin(time*1.2+i)*.14,
+        points[j+1]+Math.sin(time*1.55+i*1.3)*.34,points[j+2]+Math.cos(time+i)*.23);
+    }
+    positions.needsUpdate = true;
+  }
+  gateSignals.forEach((pair,index) => {
+    const wave = Math.cos(raceTime*1.55+GATES[index].phase);
+    for (const lamp of pair) {
+      lamp.visible = activeMap === 'race' && playing;
+      lamp.material.opacity = motion ? .45+.55*Math.abs(wave) : .8;
+      lamp.scale.setScalar(motion ? 1.15+.40*Math.abs(wave) : 1);
+    }
+  });
+  if (activeMap === 'factory') {
+    for (const {beam,mark} of doors) {
+      if (beam.visible) beam.material.opacity = motion ? .20+.068*Math.sin(time*6) : .24;
+      if (mark.visible) {
+        mark.position.y = 5.1+(motion ? Math.sin(time*4)*.13 : 0);
+      }
+    }
+    if (antibodies.visible) {
+      antibodies.children.forEach((part,i) => {
+        part.position.y = 3.4+(i%2)*.9+(motion ? Math.sin(time*3+i*.7)*.24 : 0);
+        part.rotation.z = motion ? Math.sin(time*2.6+i)*.17 : 0;
+      });
+    }
+  }
+  for (const marker of markers) {
+    marker.reveal += ((marker.sprite.visible ? 1 : 0)-marker.reveal)*(1-Math.exp(-16*dt));
+    marker.pulse = Math.max(0,marker.pulse-dt*3.1);
+    const pulse = Math.sin(Math.PI*marker.pulse);
+    const scale = motion ? 1.55*(.69+.31*marker.reveal+.25*pulse) : 1.55;
+    marker.sprite.material.opacity = motion ? marker.reveal : 1;
+    marker.sprite.scale.set(scale,scale,1);
+    marker.sprite.position.y = 2+(motion ? .12*Math.sin(time*3+marker.index)+pulse*.13 : 0);
+  }
+}
+
 let lastTs = performance.now();
 function frame() {
   requestAnimationFrame(frame);
@@ -920,6 +1017,7 @@ function frame() {
   }
   updateCamera(dt);
   updateArena();
+  animateArenaEffects(dt, t);
   updatePeers(dt);
   renderer.render(scene, camera);
 }

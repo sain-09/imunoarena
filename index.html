@@ -12,8 +12,8 @@
 <div id="hud" class="hidden">
   <div id="topwrap">
     <div id="topbar">
-      <div class="pill">⭐ Pontos: <span id="score">0</span></div>
-      <div class="pill" id="timerPill">⏱ <span id="time">15,0</span> s<div id="timerBar"></div></div>
+      <div class="pill"><svg class="ui-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M9 8H4v4a6 6 0 0 0 7 6m12-10h5v4a6 6 0 0 1-7 6" fill="none" stroke="#805627" stroke-width="2.5"/><path d="M8 5h16v8a8 8 0 0 1-6 8v4h5v3H9v-3h5v-4a8 8 0 0 1-6-8z" fill="#ffcc64" stroke="#805627" stroke-width="2"/></svg> Pontos: <span id="score">0</span></div>
+      <div class="pill" id="timerPill"><svg class="ui-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M13 4h6m-3 0v4m8 2 3-3" stroke="#315265" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="19" r="10" fill="#bdf1eb" stroke="#315265" stroke-width="2"/><path d="M16 13v6l4 2" fill="none" stroke="#315265" stroke-width="2" stroke-linecap="round"/></svg> <span id="time">15,0</span> s<div id="timerBar"></div></div>
     </div>
     <div id="qpanel">
       <h2 id="qtext"></h2>
@@ -27,8 +27,8 @@
   <h1>ImunoArena</h1>
   <p>Entre na sala da turma para disputar as três provas no seu celular.</p>
   <div id="chars">
-    <button class="charBtn active" data-char="male"><span class="em">👨‍⚕️</span>Enfermeiro</button>
-    <button class="charBtn" data-char="female"><span class="em">👩‍⚕️</span>Enfermeira</button>
+    <button class="charBtn active" data-char="male"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v12H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#3378c8" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#3378c8" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeiro</button>
+    <button class="charBtn" data-char="female"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v8q6 3 2 10h-5l-2-8H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#d7434b" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#d7434b" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeira</button>
   </div>
   <label for="playerName">Seu nome</label>
   <input id="playerName" maxlength="24" autocomplete="nickname">
@@ -67,7 +67,7 @@
 
 <div id="fieldActions"><button id="scanCell" type="button">Marcar célula</button><button id="confirmTargets" type="button">Concluir inspeção</button></div>
 <div id="joy" aria-label="Joystick de movimento">
-  <span class="joy-up">▲</span><span class="joy-left">◀</span><span class="joy-right">▶</span><span class="joy-down">▼</span>
+  <span class="joy-up" aria-hidden="true"></span><span class="joy-left" aria-hidden="true"></span><span class="joy-right" aria-hidden="true"></span><span class="joy-down" aria-hidden="true"></span>
   <div class="knob" id="knob"></div>
 </div>
 <p id="connection" role="status" class="hidden"></p>

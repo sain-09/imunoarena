@@ -235,3 +235,11 @@
   body[data-phase="playing"][data-arena="targets"] #fieldActions { display: flex; }
   #fieldActions button { min-height: 44px; padding: 6px 12px; font: inherit; font-weight: 800; color: #3d2b47; background: #ffdb88; border: 2px solid #3d2b47; border-radius: 12px; box-shadow: 0 3px #3d2b47; }
   #fieldActions button:disabled { opacity: .55; }
+
+.ui-icon { width: 1.2em; height: 1.2em; vertical-align: -.22em; }
+.medic-icon { display: block; width: 36px; height: 36px; margin: 0 auto 3px; }
+#joy span { display: block; width: 8px; height: 8px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; }
+#joy .joy-up { top: 9px; transform: translateX(-50%) rotate(-45deg); }
+#joy .joy-down { bottom: 9px; transform: translateX(-50%) rotate(135deg); }
+#joy .joy-left { left: 9px; transform: translateY(-50%) rotate(-135deg); }
+#joy .joy-right { right: 9px; transform: translateY(-50%) rotate(45deg); }

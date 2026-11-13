@@ -13,7 +13,7 @@ const fail = (status, message) => Object.assign(new Error(message), { status });
 function launch(room, now) {
   room.phase = 'playing';
   room.submissions = {};
-  room.positions = {};
+  delete room.positions;
   room.startAt = now + config.introSeconds * 1000;
   room.closeAt = room.startAt + secondsFor[room.stage] * 1000 + 6000;
 }
@@ -60,25 +60,11 @@ function submit(room, id, body, now) {
   return true;
 }
 
-function updatePosition(room,id,body,now) {
-  if (room.phase !== 'playing' || room.stage !== body.stage ||
-      now < room.startAt || room.submissions[id] || !room.players.some(p => p.id === id)) return false;
-  if (![body.x,body.z,body.facing].every(Number.isFinite)) return false;
-  if (Math.abs(body.x)>14 || body.z< -95 || body.z>27 || Math.abs(body.facing)>100) return false;
-  room.positions ??= {};
-  room.positions[id] = {
-    x: Math.round(body.x*100)/100, z: Math.round(body.z*100)/100,
-    facing: body.facing, char: body.char === 'female' ? 'female' : 'male', seenAt: now
-  };
-  return true;
-}
-
 function apply(room, id, body, now) {
   let changed = settle(room, now);
   if (body.action === 'read') return { room, changed };
   if (body.room !== room.id) throw fail(409, 'A sala mudou. Aguarde a atualização.');
   if (body.action === 'join') changed = register(room, id, body.name) || changed;
-  else if (body.action === 'position') changed = updatePosition(room,id,body,now) || changed;
   else if (body.action === 'submit') changed = submit(room, id, body, now) || changed;
   else {
     if (id !== room.host) throw fail(403, 'Apenas quem abriu a sala controla as provas.');
@@ -106,11 +92,6 @@ function snapshot(room, id) {
     host: room.host === id, joined: room.players.some(p => p.id === id),
     submitted: !!room.submissions[id], received: Object.keys(room.submissions).length,
     now: Date.now(),
-    positions: room.phase === 'playing' ? room.players.flatMap((p,key) => {
-      const position = room.positions?.[p.id];
-      if(p.id === id || room.submissions[p.id] || !position || Date.now()-position.seenAt > 9500) return [];
-      return [{key,name:p.name,x:position.x,z:position.z,facing:position.facing,char:position.char}];
-    }) : [],
     players: room.players.map((p, index) => ({ key: index, name: p.name, me: p.id === id, results: p.results }))
   };
 }

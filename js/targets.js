@@ -1,7 +1,7 @@
 'use strict';
 
 function makeTargetPuzzle(roomId) {
-  const symbols = ['◆','◇','▲','△','▶','▷','●','○','✚','✖'];
+  const symbols = ['losango cheio','losango vazado','triângulo cheio','triângulo vazado','seta cheia','seta vazada','círculo cheio','círculo vazado','cruz','xis'];
   let seed = 2166136261;
   for (const letter of roomId) seed = Math.imul(seed ^ letter.charCodeAt(0), 16777619);
   function random(max) {

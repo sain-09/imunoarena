@@ -88,12 +88,26 @@ function letterTexture(letter, bg, withBg) {
     g.fillStyle = '#ffffff'; g.fillText(letter, s / 2, s / 2 + 5);
   });
 }
-function markTexture(symbol, color) {
-  return canvasTexture(128, (g, s) => {
-    g.fillStyle = color; g.beginPath(); g.arc(s / 2, s / 2, s / 2 - 4, 0, Math.PI * 2); g.fill();
-    g.lineWidth = 8; g.strokeStyle = '#ffffff'; g.stroke();
-    g.font = 'bold 84px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillStyle = '#ffffff'; g.fillText(symbol, s / 2, s / 2 + 6);
+function symbolTexture(symbol, color) {
+  return canvasTexture(128, (g) => {
+    g.fillStyle = color;
+    g.beginPath(); g.arc(64,64,60,0,Math.PI*2); g.fill();
+    g.strokeStyle = g.fillStyle = '#fff6e4';
+    g.lineWidth = 8; g.lineCap = 'round'; g.lineJoin = 'round';
+    const path = points => points.forEach(([x,y],i) => i ? g.lineTo(x,y) : g.moveTo(x,y));
+    g.beginPath();
+    if (symbol === 'correto') path([[33,65],[54,86],[94,42]]);
+    else if (symbol === 'cruz') { path([[64,38],[64,90]]); path([[38,64],[90,64]]); }
+    else if (symbol === 'xis') { path([[43,43],[85,85]]); path([[85,43],[43,85]]); }
+    else {
+      if (symbol.startsWith('círculo')) g.arc(64,64,26,0,Math.PI*2);
+      else if (symbol.startsWith('losango')) path([[64,32],[96,64],[64,96],[32,64]]);
+      else if (symbol.startsWith('triângulo')) path([[64,33],[94,89],[34,89]]);
+      else path([[37,34],[94,64],[37,94]]);
+      g.closePath();
+      if (symbol.endsWith('cheio') || symbol.endsWith('cheia')) { g.fill(); return; }
+    }
+    g.stroke();
   });
 }
 const doors = [];
@@ -115,7 +129,7 @@ function buildDoors() {
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.55, 1.55, 6, 24, 1, true), beamMat);
     beam.position.set(def.x, 3.2, PAD_Z); beam.visible = false; factory.add(beam);
 
-    // Marca ✓ / ✗ (revelada só no fim)
+    // Marcador revelado no fim
     const mark = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true }));
     mark.scale.set(1.5, 1.5, 1); mark.position.set(def.x, 5.1, DOOR_Z + 1.4); mark.visible = false; factory.add(mark);
 
@@ -295,6 +309,8 @@ let mapReady = false;
 let markers = [];
 const remoteAvatars = new Map();
 const spriteGeometry = new THREE.Vector3();
+let livePeers = [];
+let lastMotionAt = -Infinity;
 
 function loadArena(id) {
   if (!arenaLoads.has(id)) {
@@ -342,7 +358,7 @@ function clearMarkers() {
 }
 function updatePeers(dt) {
   const inPlay = state.phase === 'playing';
-  const peers = inPlay ? (room?.positions || []) : [];
+  const peers = inPlay && performance.now() - lastMotionAt < 3200 ? livePeers : [];
   const active = new Set();
   for (const peer of peers) {
     active.add(peer.key);
@@ -371,7 +387,12 @@ function updatePeers(dt) {
         group.userData = {};
       });
     }
-    avatar.group.position.lerp(spriteGeometry.set(peer.x,0,peer.z),1-Math.exp(-5*dt));
+    const age = Math.min(.30, peer.age + (performance.now()-lastMotionAt)/1000);
+    const bounds = ARENAS[activeMap];
+    let x = THREE.MathUtils.clamp(peer.x+peer.vx*age,-bounds.width,bounds.width);
+    let z = THREE.MathUtils.clamp(peer.z+peer.vz*age,bounds.end-1,bounds.start+2);
+    if (blocked(x,z,activeMap)) { x = peer.x; z = peer.z; }
+    avatar.group.position.lerp(spriteGeometry.set(x,0,z),1-Math.exp(-17*dt));
     const delta = peer.facing-avatar.group.rotation.y;
     avatar.group.rotation.y += Math.atan2(Math.sin(delta),Math.cos(delta))*Math.min(1,dt*8);
   }
@@ -518,6 +539,7 @@ function handleRoom(updated) {
 }
 
 function startTurn() {
+  livePeers = [];
   hideIntro();
   resetInput();
   state.selected = -1;
@@ -593,7 +615,7 @@ function showTargets() {
   $('status').textContent = 'Fragmento ' + puzzle.marker + ' · Aproxime-se de uma célula para inspecioná-la.';
   puzzle.cells.forEach((symbol,index) => {
     const [x,z] = CELL_PODS[index];
-    const map = letterTexture(symbol,'#24464e',true);
+    const map = symbolTexture(symbol,'#24464e');
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent:true, depthTest:false }));
     sprite.position.set(x,2,z);
     sprite.scale.set(1.55,1.55,1);
@@ -857,7 +879,7 @@ window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
    Inicialização
    ===================================================================== */
 buildDoors();
-const correctMark = markTexture('✓', '#1b8c53');
+const correctMark = symbolTexture('correto', '#1b8c53');
 for (const door of doors) door.mark.material.map = correctMark;
 factory.add(antibodies);
 for (let i = 0; i < 3; i++) {
@@ -890,6 +912,9 @@ document.querySelectorAll('.charBtn').forEach(btn => {
 const classroom = connectClassroom(handleRoom, error => {
   $('connection').textContent = error;
   $('connection').classList.remove('hidden');
+}, (positions, serverNow) => {
+  livePeers = positions.map(peer => ({...peer, age:Math.max(0,(serverNow-peer.at)/1000)}));
+  lastMotionAt = performance.now();
 });
 $('startBtn').addEventListener('click', () => {
   if (!room) return;

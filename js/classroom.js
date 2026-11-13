@@ -1,6 +1,6 @@
 'use strict';
 
-function connectClassroom(onUpdate, onError) {
+function connectClassroom(onUpdate, onError, onPositions) {
   let id = localStorage.getItem('imunoarena-player');
   if (!id) {
     id = crypto.randomUUID();
@@ -46,17 +46,44 @@ function connectClassroom(onUpdate, onError) {
         if (queued) queued.retryRead = !ok || action === 'submit';
         if (!ok) retryAt = Date.now() + 1000;
       });
-    } else {
-      const position = readPosition();
-      if (position) send('position',position);
-      else send('read');
+    } else send('read');
+  }
+  setInterval(tick, 1800);
+
+  let previous = null;
+  async function pollMotion() {
+    const position = document.hidden ? null : readPosition();
+    if (!position || room?.phase !== 'playing' || room.submitted) {
+      previous = null;
+      setTimeout(pollMotion,200);
+      return;
     }
+    const { id: roomId, stage } = room;
+    const sent = performance.now();
+    const sameStage = previous?.roomId === roomId && previous.stage === stage;
+    const elapsed = sameStage ? Math.max(.08,(sent-previous.sent)/1000) : 1;
+    const vx = sameStage ? (position.x-previous.x)/elapsed : 0;
+    const vz = sameStage ? (position.z-previous.z)/elapsed : 0;
+    const scale = Math.min(1,10/Math.max(.001,Math.hypot(vx,vz)));
+    previous = { ...position, roomId, stage, sent };
+    let delay = room.players.length > 16 ? 650 : 300;
+    try {
+      const response = await fetch('/.netlify/functions/movimento', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id,room:roomId,stage,position:{...position,vx:vx*scale,vz:vz*scale}}),
+        signal:AbortSignal.timeout(2200)
+      });
+      if (!response.ok) throw new Error('Movimento temporariamente indisponível');
+      const data = await response.json();
+      if (room?.id === roomId && room.stage === stage && readPosition()) {
+        onPositions(data.positions, data.now ?? Date.now() + offset);
+      }
+    } catch {
+      delay = Math.max(delay,650);
+    }
+    setTimeout(pollMotion,Math.max(70,delay-(performance.now()-sent))+Math.random()*55);
   }
-  function poll() {
-    tick();
-    setTimeout(poll,(readPosition() ? 1350 : 2200)+Math.random()*400);
-  }
-  setTimeout(poll,1800);
+  setTimeout(pollMotion, 200);
   tick();
   return {
     setPositionSource(source) { readPosition = source; },

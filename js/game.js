@@ -11,10 +11,10 @@ const DOOR_DEFS = [
   { letter: 'D', x: 4, color: 0x8e44ad, css: '#773797' },
   { letter: 'E', x: 8, color: 0x22a776, css: '#18724d' }
 ];
-const DOOR_Z = -19.8;
-const PAD_Z = -18;          // centro da área de seleção em frente à porta
+const DOOR_Z = -10.89;
+const PAD_Z = -9.9;          // centro da área de seleção em frente à porta
 const ZONE_HALF_W = 1.8;     // meia-largura da zona de seleção
-const ZONE_MAX_Z = -16;     // a zona começa neste z e vai até a porta
+const ZONE_MAX_Z = -8.8;     // a zona começa neste z e vai até a porta
 const START_POS = { x: 0, z: ARENAS.factory.start };
 
 /* =====================================================================
@@ -107,13 +107,6 @@ function buildDoors() {
       new THREE.MeshBasicMaterial({ map: letterTexture(def.letter, def.css, false), transparent: true })
     );
     letter.rotation.x = -Math.PI / 2; letter.position.set(def.x, 0.22, PAD_Z); factory.add(letter);
-
-    const plaque = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.1, 1.1),
-      new THREE.MeshBasicMaterial({ map: letterTexture(def.letter, def.css, false), transparent: true })
-    );
-    plaque.position.set(def.x, 4.49, PAD_Z - 1.4);
-    factory.add(plaque);
 
     // Coluna de luz (aparece quando selecionada)
     const beamMat = new THREE.MeshBasicMaterial({

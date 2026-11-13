@@ -1,6 +1,6 @@
 const ARENAS = {
-  factory: { title: 'Linfonodo', tint: 0x30204a, fog: 0x61477d, start: 20, end: -20, width: 11, walls: [
-    [-6,12,7,1.7],[6,12,7,1.7],[0,5,8,2],[-7,-2,6,1.8],[7,-2,6,1.8],[0,-8,4.4,2]
+  factory: { title: 'Linfonodo', tint: 0x30204a, fog: 0x61477d, start: 11, end: -11, width: 11, walls: [
+    [-6,6.6,7,.935],[6,6.6,7,.935],[0,2.75,8,1.1],[-7,-1.1,6,.99],[7,-1.1,6,.99]
   ] },
   race: { title: 'Circuito vascular', tint: 0x521838, fog: 0x883452, start: 24, end: -93, width: 13, walls: [
     [-4,16,17,1.8],[4,5,17,1.8],[-4,-7,17,1.8],[4,-19,17,1.8],

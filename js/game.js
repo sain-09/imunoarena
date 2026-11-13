@@ -108,6 +108,13 @@ function buildDoors() {
     );
     letter.rotation.x = -Math.PI / 2; letter.position.set(def.x, 0.22, PAD_Z); factory.add(letter);
 
+    const plaque = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.1, 1.1),
+      new THREE.MeshBasicMaterial({ map: letterTexture(def.letter, def.css, false), transparent: true })
+    );
+    plaque.position.set(def.x, 4.49, PAD_Z - 1.4);
+    factory.add(plaque);
+
     // Coluna de luz (aparece quando selecionada)
     const beamMat = new THREE.MeshBasicMaterial({
       color: def.color, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false

@@ -197,3 +197,41 @@
     #result, #menu { max-height: 90dvh; }
   }
   @media (prefers-reduced-motion: reduce) { .intro-card { animation: none; } }
+
+  /* Placas de jogo */
+  #intro { background: #24192c88; }
+  #intro .intro-card {
+    width: min(91vw, 490px); grid-template-columns: 1fr; text-align: center;
+    background: #fff1cd; color: #362746; border: 4px solid #362746;
+    box-shadow: 0 7px #362746; border-radius: 19px; padding: 18px;
+  }
+  #intro .intro-footer { grid-column: auto; }
+  #introKicker, #introGoal, #introCount { color: #4c365b; }
+  #introTitle { color: #51366b; }
+  #intro .intro-track { background: #e4cca5; border: 1px solid #916f80; height: 9px; }
+  #introBar { background: #a872ce; }
+  #qpanel {
+    color: #38294b; background: #fff3d3; border: 3px solid #473052;
+    border-radius: 14px 14px 14px 4px; box-shadow: 0 4px #473052;
+  }
+  #qtext { font-weight: 900; }
+  #challenge {
+    color: #392a47; background: #fff1d3; border: 4px solid #432e4a;
+    border-radius: 19px; box-shadow: 0 7px #432e4a;
+  }
+  #challenge h2 { color: #573767; line-height: 1.13; }
+  #challengeChoices.quizChoices button {
+    display: flex; align-items: center; gap: 8px; padding: 5px 9px;
+    background: #fffbec; color: #362746; border: 2px solid #785883;
+    box-shadow: 0 2px #785883; border-radius: 9px;
+  }
+  #challengeChoices.quizChoices button:active { transform: translateY(2px); box-shadow: none; }
+  .quiz-letter {
+    display: inline-grid; place-items: center; flex: 0 0 26px; height: 26px;
+    border-radius: 8px; color: #392a47; background: #f6c96c; font-weight: 900;
+  }
+  .quizChoices button:nth-child(2n) .quiz-letter { background: #a4e1d0; }
+  #fieldActions { display: none; position: fixed; z-index: 5; gap: 8px; flex-direction: column; right: max(12px,env(safe-area-inset-right)); bottom: max(12px,env(safe-area-inset-bottom)); }
+  body[data-phase="playing"][data-arena="targets"] #fieldActions { display: flex; }
+  #fieldActions button { min-height: 44px; padding: 6px 12px; font: inherit; font-weight: 800; color: #3d2b47; background: #ffdb88; border: 2px solid #3d2b47; border-radius: 12px; box-shadow: 0 3px #3d2b47; }
+  #fieldActions button:disabled { opacity: .55; }

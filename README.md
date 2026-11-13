@@ -15,12 +15,14 @@ O papel de anfitrião fica vinculado ao navegador que abriu a sala. Se a página
 
 ## Provas
 
-Cada prova começa com 18 segundos de apresentação sincronizada. A pergunta e as alternativas aparecem antes de começar o cronômetro da prova. Em celulares, você pode jogar com a tela em pé ou deitada.
+Cada prova começa com uma largada sincronizada de cinco segundos, com o objetivo da missão. Na fábrica, a pergunta abre junto com a prova. Na corrida e no recife, a pergunta aparece depois da atividade. Em celulares, você pode jogar com a tela em pé ou deitada.
 
 1. **Fábrica de anticorpos.** Use o joystick para atravessar as bancadas do linfonodo até uma das cinco estações. Você pode trocar até o cronômetro zerar. A estação correta vale de 100 a 1.000 pontos conforme o tempo restante ao entrar nela.
 2. **Corrida da hemácia.** Leve oxigênio até o músculo contornando as fileiras de hemácias e cruzando os bloqueios móveis. As três primeiras colocações valem 700, 500 e 300. Os demais que concluírem ganham 100. Tempos iguais recebem a mesma colocação. A pergunta vale 300.
-3. **Alvo infectado.** Toque nas células com o fragmento indicado. A amostra de 20 células varia a cada campeonato e é igual para toda a turma. Cada marcação incorreta anula um acerto. A prática vale até 700 e a pergunta vale 300.
+3. **Alvo infectado.** Toque nas células com o fragmento indicado. Explore o recife com o joystick e use Marcar célula ao se aproximar de um alvo. A amostra de 20 células varia a cada campeonato e é igual para toda a turma. Cada marcação incorreta anula um acerto. A prática vale até 700 e a pergunta vale 300.
 
 O joystick aparece nas provas com movimentação. WASD e setas também funcionam. As perguntas, os tempos e os valores podem ser editados em js/config.js.
 
-As corridas são executadas em pistas individuais e comparadas pelo tempo. A sala sincroniza largadas e placares. Ela foi feita para uma turma de confiança: o servidor calcula os pontos, usando os tempos de corrida e de entrada na estação registrados pelos celulares.
+As corridas têm largada comum e a classificação usa o tempo de cada jogador. Os avatares dos colegas aparecem no cenário com atualização periódica e movimento interpolado. O contato entre jogadores não bloqueia o movimento. Ela foi feita para uma turma de confiança: o servidor calcula os pontos, usando os tempos de corrida e de entrada na estação registrados pelos celulares.
+
+Os três cenários ficam em models/factory.glb, models/race.glb e models/targets.glb, com texturas embutidas. js/arenas.js define os limites e as colisões correspondentes.

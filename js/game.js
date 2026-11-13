@@ -11,13 +11,11 @@ const DOOR_DEFS = [
   { letter: 'D', x: 4, color: 0x8e44ad, css: '#773797' },
   { letter: 'E', x: 8, color: 0x22a776, css: '#18724d' }
 ];
-const DOOR_Z = -12.4;
-const PAD_Z = -9.2;          // centro da área de seleção em frente à porta
+const DOOR_Z = -19.8;
+const PAD_Z = -18;          // centro da área de seleção em frente à porta
 const ZONE_HALF_W = 1.8;     // meia-largura da zona de seleção
-const ZONE_MAX_Z = -7.2;     // a zona começa neste z e vai até a porta
-const PLAYER_MIN = { x: -9.2, z: -11.2 };
-const PLAYER_MAX = { x:  9.2, z: 14 };
-const START_POS = { x: 0, z: 12 };
+const ZONE_MAX_Z = -16;     // a zona começa neste z e vai até a porta
+const START_POS = { x: 0, z: ARENAS.factory.start };
 
 /* =====================================================================
    Verificações iniciais
@@ -104,27 +102,6 @@ const antibodies = new THREE.Group();
 scene.add(factory);
 function buildDoors() {
   DOOR_DEFS.forEach((def, i) => {
-    const g = new THREE.Group();
-    g.position.set(def.x, 0, DOOR_Z);
-    factory.add(g);
-
-    const frameMat = lambert(def.color, { emissive: def.color });
-    frameMat.emissiveIntensity = 0;
-    const mkFrame = (w, h, d, x, y, z) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
-      m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.add(m); return m;
-    };
-    mkFrame(0.9, 5.2, 1.2, -1.45, 2.6, 0);
-    mkFrame(0.9, 5.2, 1.2, 1.45, 2.6, 0);
-    mkFrame(3.8, 1.0, 1.2, 0, 5.7, 0);
-    addBox(g, 2.3, 5.2, 0.3, 0x2d1e5f, 0, 2.6, -0.4, true);
-
-    // Área de seleção no chão
-    const padMat = lambert(def.color, { emissive: def.color });
-    padMat.emissiveIntensity = 0.15;
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.2, 4), padMat);
-    pad.position.set(def.x, 0.1, PAD_Z); pad.receiveShadow = true; factory.add(pad);
-
     const letter = new THREE.Mesh(
       new THREE.PlaneGeometry(1.9, 1.9),
       new THREE.MeshBasicMaterial({ map: letterTexture(def.letter, def.css, false), transparent: true })
@@ -142,7 +119,7 @@ function buildDoors() {
     const mark = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true }));
     mark.scale.set(1.5, 1.5, 1); mark.position.set(def.x, 5.1, DOOR_Z + 1.4); mark.visible = false; factory.add(mark);
 
-    doors.push({ frameMat, padMat, beam, mark });
+    doors.push({ beam, mark });
   });
 }
 
@@ -311,17 +288,102 @@ oxygen.position.y = 1.1;
 raceAvatar.add(oxygen);
 scene.add(raceAvatar);
 raceAvatar.visible = false;
-const raceFinishZ = -10.5;
-const organWorld = makeOrganWorld(THREE, canvasTexture);
-for (const group of Object.values(organWorld.scenes)) scene.add(group);
+const arenaModels = {};
+const arenaLoads = new Map();
+let activeMap = 'factory';
+let mapReady = false;
+let markers = [];
+const remoteAvatars = new Map();
+const spriteGeometry = new THREE.Vector3();
+
+function loadArena(id) {
+  if (!arenaLoads.has(id)) {
+    const loader = new THREE.GLTFLoader();
+    arenaLoads.set(id, loader.loadAsync('models/' + id + '.glb').then(gltf => {
+      const model = gltf.scene;
+      model.visible = activeMap === id;
+      scene.add(model);
+      arenaModels[id] = model;
+      return model;
+    }).catch(error => {
+      arenaLoads.delete(id);
+      throw error;
+    }));
+  }
+  return arenaLoads.get(id);
+}
+
 function showMap(id) {
-  for (const [key, group] of Object.entries(organWorld.scenes)) group.visible = key === id;
-  const palette = organWorld.palettes[id];
-  scene.background = new THREE.Color(palette.bg);
+  activeMap = id;
+  for (const [key, group] of Object.entries(arenaModels)) group.visible = key === id;
+  const palette = ARENAS[id];
+  scene.background = new THREE.Color(palette.tint);
   scene.fog = new THREE.FogExp2(palette.fog, .023);
   factory.visible = id === 'factory';
   raceAvatar.visible = id === 'race';
-  player.group.visible = id === 'factory';
+  player.group.visible = id !== 'race';
+}
+function updateArena() {
+  const model = arenaModels.race;
+  if (activeMap !== 'race' || !model) return;
+  GATES.forEach((gate,i) => {
+    const object = model.getObjectByName('gate_' + i);
+    if (object) object.position.set(gateX(gate,raceTime),0,gate.z);
+  });
+}
+
+function clearMarkers() {
+  for (const marker of markers) {
+    scene.remove(marker.sprite);
+    marker.sprite.material.map.dispose();
+    marker.sprite.material.dispose();
+  }
+  markers = [];
+}
+function updatePeers(dt) {
+  const inPlay = state.phase === 'playing';
+  const peers = inPlay ? (room?.positions || []) : [];
+  const active = new Set();
+  for (const peer of peers) {
+    active.add(peer.key);
+    let avatar = remoteAvatars.get(peer.key);
+    if (!avatar) {
+      const group = activeMap === 'race' ? raceAvatar.clone(true) : buildCharacter(peer.char);
+      const name = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: canvasTexture(256,(ctx,size) => {
+          ctx.fillStyle = '#30243f'; ctx.fillRect(8,90,240,76);
+          ctx.fillStyle = '#fff2d6'; ctx.textAlign = 'center'; ctx.font = 'bold 28px sans-serif';
+          ctx.fillText(peer.name, size/2, 138, 216);
+        }), depthTest: false
+      }));
+      name.position.y = activeMap === 'race' ? 1.85 : 3.3;
+      name.scale.set(3,3,1);
+      group.add(name);
+      group.position.set(peer.x,0,peer.z);
+      scene.add(group);
+      avatar = {group,name,arena:activeMap};
+      remoteAvatars.set(peer.key,avatar);
+      if(activeMap !== 'race') characterModels.load(peer.char).then(model => {
+        if(!model || remoteAvatars.get(peer.key) !== avatar) return;
+        const fallback=group.userData.body;
+        group.remove(fallback); disposeGroup(fallback);
+        group.add(model);
+        group.userData = {};
+      });
+    }
+    avatar.group.position.lerp(spriteGeometry.set(peer.x,0,peer.z),1-Math.exp(-5*dt));
+    const delta = peer.facing-avatar.group.rotation.y;
+    avatar.group.rotation.y += Math.atan2(Math.sin(delta),Math.cos(delta))*Math.min(1,dt*8);
+  }
+  for (const [key,avatar] of remoteAvatars) {
+    if (active.has(key)) continue;
+    scene.remove(avatar.group);
+    avatar.group.remove(avatar.name);
+    avatar.name.material.map.dispose();
+    avatar.name.material.dispose();
+    if (avatar.arena !== 'race' && avatar.group.userData.body) disposeGroup(avatar.group);
+    remoteAvatars.delete(key);
+  }
 }
 let raceTime = 0;
 let room;
@@ -333,6 +395,7 @@ function currentStage() { return CONFIG.stages[state.stageIndex]; }
 function setPhase(phase) {
   state.phase = phase;
   document.body.dataset.phase = phase;
+  document.body.dataset.arena = activeMap;
 }
 function setClock(seconds) {
   state.duration = seconds;
@@ -346,10 +409,9 @@ function updateClock(now) {
   $('timerPill').classList.toggle('low', state.remaining <= 5);
 }
 
-function blocked(x, z, id) {
-  if (id === 'factory') return FACTORY_DIVIDERS.some(obstacle => hitsObstacle(x,z,obstacle));
-  return VESSEL_WALLS.some(obstacle => hitsObstacle(x,z,obstacle)) ||
-    VESSEL_GATES.some(gate => hitsObstacle(x,z,gate,vesselGateX(gate,raceTime)));
+function blocked(x,z,id) {
+  return ARENAS[id].walls.some(wall => inside(x,z,wall)) ||
+    (id === 'race' && GATES.some(gate => inside(x,z,[gateX(gate,raceTime),gate.z,2.7,1.5])));
 }
 
 function hideIntro() {
@@ -360,25 +422,18 @@ function showIntro() {
   const stage = currentStage();
   showMap(stage.id);
   player.x = START_POS.x;
-  player.z = START_POS.z;
+  player.z = ARENAS[stage.id].start;
   player.facing = Math.PI;
   state.selected = -1;
   if (stage.id === 'factory') refreshSelection();
+  if (stage.id === 'race') raceTime = 0;
   setPhase('intro');
   $('menu').classList.add('hidden');
   for (const id of ['result','hud','challenge']) $(id).classList.add('hidden');
   $('intro').dataset.theme = stage.id;
   $('introKicker').textContent = 'Prova ' + (room.stage + 1) + ' de ' + CONFIG.stages.length;
   $('introTitle').textContent = stage.title;
-  $('introQuestion').textContent = stage.text;
   $('introGoal').textContent = stage.goal;
-  const choices = $('introChoices');
-  choices.replaceChildren();
-  stage.options.forEach((text,i) => {
-    const item = document.createElement('li');
-    item.textContent = DOOR_DEFS[i].letter + ' · ' + text;
-    choices.append(item);
-  });
   updateIntro();
   $('intro').classList.remove('hidden');
 }
@@ -419,7 +474,7 @@ function handleRoom(updated) {
       : 'Digite seu nome para entrar na sala da turma.';
     $('roomPlayers').textContent = room.players.map(player => player.name).join(' · ');
     $('startBtn').textContent = room.joined ? 'Começar campeonato' : 'Entrar na sala';
-    $('startBtn').disabled = room.joined && !room.host;
+    $('startBtn').disabled = !mapReady || (room.joined && !room.host);
     hideIntro();
     showMap('factory');
     player.x = START_POS.x;
@@ -450,9 +505,13 @@ function handleRoom(updated) {
   const key = room.id + '/' + room.stage;
   if (played === key || scheduled !== null) return;
   if (room.startAt > classroom.now()) showIntro();
-  scheduled = setTimeout(() => {
+  loadArena(currentStage().id).catch(() => {});
+  scheduled = setTimeout(async () => {
     scheduled = null;
     if (room.phase !== 'playing' || room.id + '/' + room.stage !== key || room.submitted) return;
+    try { await loadArena(currentStage().id); }
+    catch { $('connection').textContent = 'Falha ao carregar o cenário 3D. Tentando novamente…'; $('connection').classList.remove('hidden'); return; }
+    if (room.phase !== 'playing' || room.id + '/' + room.stage !== key || played === key || room.submitted) return;
     played = key;
     startTurn();
   }, Math.max(0, room.startAt - classroom.now()));
@@ -466,7 +525,7 @@ function startTurn() {
   state.raceMs = null;
   state.marks.clear();
   player.x = START_POS.x;
-  player.z = START_POS.z;
+  player.z = ARENAS[currentStage().id].start;
   player.facing = player.faceTarget = Math.PI;
   const id = currentStage().id;
   raceTime = 0;
@@ -499,7 +558,7 @@ function startTurn() {
     setClock(CONFIG.roundSeconds);
     state.deadline = performance.now() + room.startAt + CONFIG.roundSeconds * 1000 - classroom.now();
   } else {
-    $('status').textContent = 'Contorne as fileiras, atravesse as passagens móveis e entregue o O₂ ao músculo.';
+    $('status').textContent = 'Entregue o O₂ · 0% do percurso';
     setClock(CONFIG.raceSeconds);
     state.deadline = performance.now() + room.startAt + CONFIG.raceSeconds * 1000 - classroom.now();
   }
@@ -510,8 +569,6 @@ function refreshSelection() {
   altEls.forEach((item, i) => item.classList.toggle('sel', i === state.selected));
   doors.forEach((door, i) => {
     const active = i === state.selected;
-    door.frameMat.emissiveIntensity = active ? .55 : 0;
-    door.padMat.emissiveIntensity = active ? .75 : .15;
     door.beam.visible = active;
     door.mark.visible = false;
   });
@@ -528,46 +585,57 @@ function updateSelection() {
 }
 
 function showTargets() {
-  setPhase('challenge');
+  clearMarkers();
+  setPhase('playing');
   const puzzle = makeTargetPuzzle(room.id);
-  $('challenge').classList.remove('hidden');
-  $('challengeTitle').textContent = 'Reconheça as células infectadas';
-  $('challengeHelp').textContent = 'Procure o fragmento ' + puzzle.marker + '. Toque apenas nas células que exibem esse marcador.';
-  $('confirmTargets').classList.remove('hidden');
-  const grid = $('challengeChoices');
-  grid.className = 'cellGrid';
-  grid.replaceChildren();
-  puzzle.cells.forEach((marker, index) => {
-    const cell = document.createElement('button');
-    const nucleus = document.createElement('span');
-    nucleus.className = 'cell-nucleus';
-    const receptor = document.createElement('span');
-    receptor.className = 'cell-receptor';
-    receptor.textContent = marker;
-    cell.append(nucleus, receptor);
-    cell.setAttribute('aria-label', 'Célula ' + (index + 1) + ', marcador ' + marker);
-    cell.setAttribute('aria-pressed', 'false');
-    cell.addEventListener('click', () => {
-      if (state.phase !== 'challenge' || performance.now() >= state.deadline) return;
-      if (state.marks.has(index)) state.marks.delete(index);
-      else state.marks.add(index);
-      cell.setAttribute('aria-pressed', String(state.marks.has(index)));
-    });
-    grid.append(cell);
+  $('qtext').textContent = 'Recife celular';
+  state.fragment = puzzle.marker;
+  $('status').textContent = 'Fragmento ' + puzzle.marker + ' · Aproxime-se de uma célula para inspecioná-la.';
+  puzzle.cells.forEach((symbol,index) => {
+    const [x,z] = CELL_PODS[index];
+    const map = letterTexture(symbol,'#24464e',true);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent:true, depthTest:false }));
+    sprite.position.set(x,2,z);
+    sprite.scale.set(1.55,1.55,1);
+    sprite.visible = false;
+    scene.add(sprite);
+    markers.push({sprite,x,z,index,symbol});
   });
   setClock(CONFIG.targetSeconds);
   state.deadline = performance.now() + room.startAt + CONFIG.targetSeconds * 1000 - classroom.now();
 }
+let nearestCell;
+function scanCells() {
+  nearestCell = null;
+  let nearestDistance = 2.4;
+  for(const marker of markers) {
+    const distance = Math.hypot(player.x-marker.x,player.z-marker.z);
+    marker.sprite.visible = distance < 6.5;
+    marker.sprite.material.color.setHex(state.marks.has(marker.index) ? 0xffc66d : 0xffffff);
+    if(distance < nearestDistance) { nearestDistance = distance; nearestCell = marker; }
+  }
+  $('status').textContent = 'Fragmento ' + state.fragment + ' · ' + state.marks.size + ' células marcadas';
+  const button = $('scanCell');
+  button.disabled = !nearestCell;
+  button.textContent = nearestCell && state.marks.has(nearestCell.index) ? 'Desmarcar' : 'Marcar célula';
+}
+function toggleCell() {
+  if(state.phase !== 'playing' || activeMap !== 'targets' || !nearestCell || performance.now() >= state.deadline) return;
+  const index = nearestCell.index;
+  if(state.marks.has(index)) state.marks.delete(index);
+  else state.marks.add(index);
+  scanCells();
+}
 function confirmTargets() {
-  if (state.phase !== 'challenge') return;
-  showQuiz();
+  if(state.phase === 'playing' && activeMap === 'targets') showQuiz();
 }
 function showQuiz() {
+  clearMarkers();
   resetInput();
   setPhase('quiz');
   $('challenge').classList.remove('hidden');
-  $('confirmTargets').classList.add('hidden');
   $('challengeTitle').textContent = currentStage().text;
+  $('challenge').dataset.theme = currentStage().id;
   $('challengeHelp').textContent = currentStage().id === 'race'
     ? (state.raceMs === null ? 'Tempo da corrida esgotado.' : 'Entrega concluída em ' + (state.raceMs / 1000).toFixed(2) + ' s.')
     : 'Escolha a célula responsável por eliminar os alvos infectados.';
@@ -577,7 +645,10 @@ function showQuiz() {
   currentStage().options.forEach((text, index) => {
     const letter = DOOR_DEFS[index].letter;
     const button = document.createElement('button');
-    button.textContent = letter + ' · ' + text;
+    const badge = document.createElement('span');
+    badge.className = 'quiz-letter';
+    badge.textContent = letter;
+    button.append(badge, document.createTextNode(text));
     button.addEventListener('click', () => {
       if (state.phase === 'quiz') finishAttempt(performance.now() < state.deadline ? letter : null);
     });
@@ -597,6 +668,7 @@ function total(competitor) {
 }
 function showStandings(stage) {
   hideIntro();
+  clearMarkers();
   setPhase('result');
   $('hud').classList.add('hidden');
   $('challenge').classList.add('hidden');
@@ -644,8 +716,9 @@ function movePlayer(dt) {
     const oldX = player.x, oldZ = player.z;
     player.x += ix * CONFIG.moveSpeed * dt;
     player.z += iz * CONFIG.moveSpeed * dt;
-    player.x = Math.min(PLAYER_MAX.x, Math.max(PLAYER_MIN.x, player.x));
-    player.z = Math.min(PLAYER_MAX.z, Math.max(PLAYER_MIN.z, player.z));
+    const bounds = ARENAS[activeMap];
+    player.x = Math.min(bounds.width, Math.max(-bounds.width, player.x));
+    player.z = Math.min(bounds.start+2, Math.max(bounds.end-1, player.z));
     {
       const id = currentStage().id;
       if (blocked(player.x, oldZ, id)) player.x = oldX;
@@ -698,9 +771,8 @@ function updateCamera(dt) {
   } else {
     const fx = player.x * 0.7;
     const compactLandscape = camera.aspect > 1.25 && window.innerHeight < 600;
-    const tissue = currentStage().id === 'targets';
-    camGoalPos.set(tissue ? 0 : fx, compactLandscape ? 12 : 10, tissue ? 21 : player.z + 13);
-    camGoalLook.set(tissue ? 0 : fx, 1.5, tissue ? -1 : player.z - 7);
+    camGoalPos.set(fx, compactLandscape ? 12 : 11, player.z + 13);
+    camGoalLook.set(fx, 1.5, player.z - 6);
   }
   const k = 1 - Math.pow(0.002, dt);
   camPos.lerp(camGoalPos, k);
@@ -725,7 +797,13 @@ function frame() {
     if (state.remaining > 0) {
       moving = movePlayer(dt);
       if (currentStage().id === 'factory') updateSelection();
-      if (currentStage().id === 'race' && player.z <= raceFinishZ) {
+      if (activeMap === 'targets') scanCells();
+      if (activeMap === 'race') {
+        const bounds = ARENAS.race;
+        const percent = Math.max(0, Math.min(100, Math.floor(100*(bounds.start-player.z)/(bounds.start-bounds.end))));
+        $('status').textContent = 'Entregue o O₂ · ' + percent + '% do percurso';
+      }
+      if (activeMap === 'race' && player.z <= ARENAS.race.end) {
         state.raceMs = Math.max(1, Math.round(nowMs - (state.deadline - state.duration * 1000)));
         showQuiz();
       }
@@ -752,7 +830,8 @@ function frame() {
     raceAvatar.rotation.z = moving ? Math.sin(t * 12) * .1 : 0;
   }
   updateCamera(dt);
-  organWorld.update(t, raceTime);
+  updateArena();
+  updatePeers(dt);
   renderer.render(scene, camera);
 }
 
@@ -794,6 +873,11 @@ for (let i = 0; i < 3; i++) {
 antibodies.visible = false;
 setCharacter('male');
 showMap('factory');
+if (THREE.GLTFLoader) {
+  loadArena('factory').then(() => { mapReady = true; if(room) handleRoom(room); }).catch(() => {
+    $('roomInfo').textContent = 'Não foi possível carregar o linfonodo. Recarregue a página.';
+  });
+} else showFatal('Não foi possível iniciar o carregador dos mapas.');
 onResize();
 
 document.querySelectorAll('.charBtn').forEach(btn => {
@@ -813,13 +897,17 @@ $('startBtn').addEventListener('click', () => {
   else {
     const input = $('playerName');
     if (!input.value.trim()) { input.focus(); return; }
-    classroom.send('join', { name: input.value.trim() });
+    classroom.send('join', { name: input.value.trim(), char: state.charId });
   }
 });
 $('againBtn').addEventListener('click', () => {
   classroom.send(room.stage === CONFIG.stages.length - 1 ? 'reset' : 'next');
 });
 $('confirmTargets').addEventListener('click', confirmTargets);
+$('scanCell').addEventListener('click', toggleCell);
+window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
+classroom.setPositionSource(() => state.phase === 'playing'
+  ? { x:player.x, z:player.z, facing:player.facing, char:state.charId } : null);
 requestAnimationFrame(frame);
 })();
 

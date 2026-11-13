@@ -11,6 +11,7 @@ function connectClassroom(onUpdate, onError) {
   let queued = null;
   let retryAt = 0;
   let offset = 0;
+  let readPosition = () => null;
 
   async function send(action, values = {}) {
     if (busy) return false;
@@ -45,11 +46,20 @@ function connectClassroom(onUpdate, onError) {
         if (queued) queued.retryRead = !ok || action === 'submit';
         if (!ok) retryAt = Date.now() + 1000;
       });
-    } else send('read');
+    } else {
+      const position = readPosition();
+      if (position) send('position',position);
+      else send('read');
+    }
   }
-  setInterval(tick, 2500);
+  function poll() {
+    tick();
+    setTimeout(poll,(readPosition() ? 1350 : 2200)+Math.random()*400);
+  }
+  setTimeout(poll,1800);
   tick();
   return {
+    setPositionSource(source) { readPosition = source; },
     send, now: () => Date.now() + offset,
     submit(values) {
       queued = { ...values, room: room.id, stage: room.stage, retryRead: false };

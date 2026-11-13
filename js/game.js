@@ -309,8 +309,12 @@ let mapReady = false;
 let markers = [];
 const remoteAvatars = new Map();
 const spriteGeometry = new THREE.Vector3();
-let livePeers = [];
-let lastMotionAt = -Infinity;
+const livePeers = new Map();
+const peerLifetimeMs = 6000;
+let activeRound = null;
+function roundKey(snapshot) {
+  return snapshot.id + '/' + snapshot.stage;
+}
 
 function loadArena(id) {
   if (!arenaLoads.has(id)) {
@@ -357,12 +361,21 @@ function clearMarkers() {
   markers = [];
 }
 function updatePeers(dt) {
-  const inPlay = state.phase === 'playing';
-  const peers = inPlay && performance.now() - lastMotionAt < 3200 ? livePeers : [];
+  const now = performance.now();
+  for (const [key, peer] of livePeers) {
+    if (now - peer.receivedAt > peerLifetimeMs) livePeers.delete(key);
+  }
+  const inPlay = activeRound && room?.phase === 'playing' && activeRound === roundKey(room) &&
+    (state.phase === 'playing' || state.phase === 'quiz');
+  const peers = inPlay ? livePeers.values() : [];
   const active = new Set();
   for (const peer of peers) {
     active.add(peer.key);
     let avatar = remoteAvatars.get(peer.key);
+    if (avatar && avatar.arena !== activeMap) {
+      removePeer(peer.key, avatar);
+      avatar = null;
+    }
     if (!avatar) {
       const group = activeMap === 'race' ? raceAvatar.clone(true) : buildCharacter(peer.char);
       const name = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -374,6 +387,7 @@ function updatePeers(dt) {
       }));
       name.position.y = activeMap === 'race' ? 1.85 : 3.3;
       name.scale.set(3,3,1);
+      group.visible = true;
       group.add(name);
       group.position.set(peer.x,0,peer.z);
       scene.add(group);
@@ -387,7 +401,7 @@ function updatePeers(dt) {
         group.userData = {};
       });
     }
-    const age = Math.min(.30, peer.age + (performance.now()-lastMotionAt)/1000);
+    const age = Math.min(.30, peer.age + (now-peer.receivedAt)/1000);
     const bounds = ARENAS[activeMap];
     let x = THREE.MathUtils.clamp(peer.x+peer.vx*age,-bounds.width,bounds.width);
     let z = THREE.MathUtils.clamp(peer.z+peer.vz*age,bounds.end-1,bounds.start+2);
@@ -398,13 +412,16 @@ function updatePeers(dt) {
   }
   for (const [key,avatar] of remoteAvatars) {
     if (active.has(key)) continue;
-    scene.remove(avatar.group);
-    avatar.group.remove(avatar.name);
-    avatar.name.material.map.dispose();
-    avatar.name.material.dispose();
-    if (avatar.arena !== 'race' && avatar.group.userData.body) disposeGroup(avatar.group);
-    remoteAvatars.delete(key);
+    removePeer(key, avatar);
   }
+}
+function removePeer(key, avatar) {
+  scene.remove(avatar.group);
+  avatar.group.remove(avatar.name);
+  avatar.name.material.map.dispose();
+  avatar.name.material.dispose();
+  if (avatar.arena !== 'race' && avatar.group.userData.body) disposeGroup(avatar.group);
+  remoteAvatars.delete(key);
 }
 let raceTime = 0;
 let room;
@@ -478,6 +495,12 @@ function waitForScores() {
 }
 
 function handleRoom(updated) {
+  if (!room || roundKey(room) !== roundKey(updated) || updated.phase !== 'playing') {
+    activeRound = null;
+    livePeers.clear();
+    clearTimeout(scheduled);
+    scheduled = null;
+  }
   room = updated;
   $('connection').classList.add('hidden');
   if (room.phase === 'lobby') {
@@ -523,23 +546,24 @@ function handleRoom(updated) {
     return;
   }
 
-  const key = room.id + '/' + room.stage;
+  const key = roundKey(room);
   if (played === key || scheduled !== null) return;
   if (room.startAt > classroom.now()) showIntro();
   loadArena(currentStage().id).catch(() => {});
   scheduled = setTimeout(async () => {
-    scheduled = null;
     if (room.phase !== 'playing' || room.id + '/' + room.stage !== key || room.submitted) return;
     try { await loadArena(currentStage().id); }
-    catch { $('connection').textContent = 'Falha ao carregar o cenário 3D. Tentando novamente…'; $('connection').classList.remove('hidden'); return; }
+    catch { if (roundKey(room) !== key) return; scheduled = null; $('connection').textContent = 'Falha ao carregar o cenário 3D. Tentando novamente…'; $('connection').classList.remove('hidden'); return; }
     if (room.phase !== 'playing' || room.id + '/' + room.stage !== key || played === key || room.submitted) return;
+    scheduled = null;
     played = key;
     startTurn();
   }, Math.max(0, room.startAt - classroom.now()));
 }
 
 function startTurn() {
-  livePeers = [];
+  activeRound = roundKey(room);
+  livePeers.clear();
   hideIntro();
   resetInput();
   state.selected = -1;
@@ -912,9 +936,12 @@ document.querySelectorAll('.charBtn').forEach(btn => {
 const classroom = connectClassroom(handleRoom, error => {
   $('connection').textContent = error;
   $('connection').classList.remove('hidden');
-}, (positions, serverNow) => {
-  livePeers = positions.map(peer => ({...peer, age:Math.max(0,(serverNow-peer.at)/1000)}));
-  lastMotionAt = performance.now();
+}, (positions, serverNow, key) => {
+  if (key !== activeRound) return;
+  const receivedAt = performance.now();
+  for (const peer of positions) {
+    livePeers.set(peer.key, {...peer, receivedAt, age:Math.max(0,(serverNow-peer.at)/1000)});
+  }
 });
 $('startBtn').addEventListener('click', () => {
   if (!room) return;
@@ -931,8 +958,10 @@ $('againBtn').addEventListener('click', () => {
 $('confirmTargets').addEventListener('click', confirmTargets);
 $('scanCell').addEventListener('click', toggleCell);
 window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
-classroom.setPositionSource(() => state.phase === 'playing'
-  ? { x:player.x, z:player.z, facing:player.facing, char:state.charId } : null);
+classroom.setPositionSource(() => {
+  if (!activeRound || !['playing','quiz'].includes(state.phase)) return null;
+  return { round:activeRound, x:player.x, z:player.z, facing:player.facing, char:state.charId };
+});
 requestAnimationFrame(frame);
 })();
 

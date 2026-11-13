@@ -53,7 +53,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
   let previous = null;
   async function pollMotion() {
     const position = document.hidden ? null : readPosition();
-    if (!position || room?.phase !== 'playing' || room.submitted) {
+    if (!position || room?.phase !== 'playing' || room.submitted || position.round !== room.id + '/' + room.stage) {
       previous = null;
       setTimeout(pollMotion,200);
       return;
@@ -75,8 +75,8 @@ function connectClassroom(onUpdate, onError, onPositions) {
       });
       if (!response.ok) throw new Error('Movimento temporariamente indisponível');
       const data = await response.json();
-      if (room?.id === roomId && room.stage === stage && readPosition()) {
-        onPositions(data.positions, data.now ?? Date.now() + offset);
+      if (room?.id === roomId && room.stage === stage && readPosition()?.round === position.round) {
+        onPositions(data.positions, data.now ?? Date.now() + offset, position.round);
       }
     } catch {
       delay = Math.max(delay,650);

@@ -1,10 +1,12 @@
 import { getStore } from '@netlify/blobs';
+import arenaData from '../../js/arenas.js';
+import config from '../../js/config.js';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const reply = (data, status = 200) => Response.json(data, {
   status, headers: { 'Cache-Control': 'no-store' }
 });
-const freshForMs = 3200;
+const freshForMs = 5000;
 
 export default async function handler(request) {
   if (request.method !== 'POST') return reply({}, 405);
@@ -22,9 +24,11 @@ export default async function handler(request) {
 
   // Each player updates an independent entry, away from the lobby/score transaction.
   const prefix = 'motion/' + room.id + '/' + room.stage + '/';
+  const arena = arenaData.ARENAS[config.stages[room.stage]?.id];
+  if (!arena) return reply({ positions: [] });
   const p = body.position;
   if (p && [p.x,p.z,p.facing,p.vx,p.vz].every(Number.isFinite) &&
-      Math.abs(p.x)<=14 && p.z>=-95 && p.z<=27 &&
+      Math.abs(p.x)<=arena.width+.01 && p.z>=arena.end-1.01 && p.z<=arena.start+2.01 &&
       Math.abs(p.facing)<=100 && Math.hypot(p.vx,p.vz)<=15) {
     await store.setJSON(prefix + body.id, {
       x:p.x, z:p.z, facing:p.facing, vx:p.vx, vz:p.vz,

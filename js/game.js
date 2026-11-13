@@ -207,7 +207,7 @@ const characterModels = createCharacterModels(THREE, CONFIG.models);
 
 function setCharacter(id) {
   state.charId = id;
-  if (player.group) { scene.remove(player.group); if (player.group.userData.legL) disposeGroup(player.group); }
+  if (player.group) { scene.remove(player.group); if (!player.group.userData.sharedModel) disposeGroup(player.group); }
   player.group = buildCharacter(id);
   scene.add(player.group);
   placePlayer();
@@ -218,7 +218,7 @@ function setCharacter(id) {
     group.remove(fallback);
     disposeGroup(fallback);
     group.add(model);
-    group.userData = { body: model, walk: 0 };
+    attachMotionParts(group, model);
   });
 }
 function placePlayer() {
@@ -300,6 +300,7 @@ raceAvatar.add(center);
 const oxygen = new THREE.Mesh(new THREE.SphereGeometry(.25, 12, 10), lambert(0x82edff));
 oxygen.position.y = 1.1;
 raceAvatar.add(oxygen);
+raceAvatar.userData.racer = true;
 scene.add(raceAvatar);
 raceAvatar.visible = false;
 const arenaModels = {};
@@ -398,7 +399,7 @@ function updatePeers(dt) {
         const fallback=group.userData.body;
         group.remove(fallback); disposeGroup(fallback);
         group.add(model);
-        group.userData = {};
+        attachMotionParts(group, model);
       });
     }
     const age = Math.min(.30, peer.age + (now-peer.receivedAt)/1000);
@@ -407,6 +408,7 @@ function updatePeers(dt) {
     let z = THREE.MathUtils.clamp(peer.z+peer.vz*age,bounds.end-1,bounds.start+2);
     if (blocked(x,z,activeMap)) { x = peer.x; z = peer.z; }
     avatar.group.position.lerp(spriteGeometry.set(x,0,z),1-Math.exp(-17*dt));
+    animateCharacter(avatar.group, dt, Math.hypot(peer.vx, peer.vz) / CONFIG.moveSpeed);
     const delta = peer.facing-avatar.group.rotation.y;
     avatar.group.rotation.y += Math.atan2(Math.sin(delta),Math.cos(delta))*Math.min(1,dt*8);
   }
@@ -420,7 +422,7 @@ function removePeer(key, avatar) {
   avatar.group.remove(avatar.name);
   avatar.name.material.map.dispose();
   avatar.name.material.dispose();
-  if (avatar.arena !== 'race' && avatar.group.userData.body) disposeGroup(avatar.group);
+  if (avatar.arena !== 'race' && !avatar.group.userData.sharedModel) disposeGroup(avatar.group);
   remoteAvatars.delete(key);
 }
 let raceTime = 0;
@@ -721,6 +723,14 @@ function showStandings(stage) {
   $('result').classList.remove('hidden');
   showMap(stage.id);
   const final = state.stageIndex === CONFIG.stages.length - 1;
+  const me = room.players.find(competitor => competitor.me);
+  const entry = me?.results[state.stageIndex];
+  const winner = me && total(me) > 0 && room.players.every(competitor => total(me) >= total(competitor));
+  const key = roundKey(room);
+  if (lastCelebration !== key && (entry?.quiz > 0 || entry?.place === 1 || (final && winner))) {
+    lastCelebration = key;
+    celebrationEnds = performance.now() + 2300;
+  }
   $('resTitle').textContent = final ? 'Placar final' : 'Resultado · ' + stage.title;
   $('resSummary').textContent = stage.correct + ' · ' + stage.explanation;
   if (stage.id === 'factory') {
@@ -776,31 +786,60 @@ function movePlayer(dt) {
   return mag;
 }
 
-function animateCharacter(dt, moving) {
-  const u = player.group.userData;
-  if (!u.legL) {
-    if (moving > 0) {
-      u.walk += dt * 11;
-      u.body.position.y = Math.abs(Math.sin(u.walk)) * 0.10;
-      u.body.rotation.z = Math.sin(u.walk) * 0.035;
-    } else {
-      const settle = 1 - Math.min(1, dt * 10);
-      u.body.position.y *= settle;
-      u.body.rotation.z *= settle;
+let lastCelebration;
+let celebrationEnds = 0;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function attachMotionParts(group, model) {
+  group.userData = {body:model, sharedModel:true};
+  for (const name of ['legL','legR','armL','armR']) {
+    group.userData[name] = model.getObjectByName(name);
+  }
+}
+
+function animateCharacter(group, dt, moving, celebrating = false) {
+  const u = group.userData;
+  const body = u.body;
+  const amount = reducedMotion.matches ? .5 : 1;
+  const step = Math.min(1, moving);
+  u.walk = (u.walk || 0) + dt * (4 + step * 8);
+  const gait = Math.sin(u.walk);
+  const cheer = celebrating ? (performance.now() - celebrationEnds + 2300) / 1000 : 0;
+  const jump = celebrating ? Math.abs(Math.sin(cheer*7))*.42 : 0;
+  const blend = 1 - Math.exp(-15*dt);
+  const ease = (value,target) => value + (target-value)*blend;
+
+  if (u.racer) {
+    for (const piece of group.children.slice(0,3)) {
+      if (piece.userData.restY === undefined) piece.userData.restY = piece.position.y;
+      const oxygen = piece === group.children[2];
+      piece.position.y = ease(piece.position.y,piece.userData.restY + amount*(jump + gait*(oxygen ? .14 : .048)*(.35+step)));
+      const roll = ease(piece.userData.roll || 0, amount * gait * (.035 + step*.09));
+      piece.rotation.z += roll - (piece.userData.roll || 0);
+      piece.userData.roll = roll;
     }
     return;
   }
-  if (moving > 0) {
-    u.walk += dt * 11;
-    const s = Math.sin(u.walk);
-    u.legL.rotation.x = s * 0.7; u.legR.rotation.x = -s * 0.7;
-    u.armL.rotation.x = -s * 0.6; u.armR.rotation.x = s * 0.6;
-    u.body.position.y = Math.abs(s) * 0.08;
-  } else {
-    const k = Math.min(1, dt * 10);
-    u.legL.rotation.x *= 1 - k; u.legR.rotation.x *= 1 - k;
-    u.armL.rotation.x *= 1 - k; u.armR.rotation.x *= 1 - k;
-    u.body.position.y *= 1 - k;
+  if (!body) return;
+  body.position.y = ease(body.position.y, amount * (jump + (step ? Math.abs(gait)*step*.095 : gait*.025)));
+  body.rotation.z = ease(body.rotation.z, amount * gait * (.014+step*.045));
+  body.rotation.x = ease(body.rotation.x, step*.11*amount);
+  if (u.legL && u.legR) {
+    u.legL.rotation.x = ease(u.legL.rotation.x, gait*step*.55*amount);
+    u.legR.rotation.x = ease(u.legR.rotation.x,-gait*step*.55*amount);
+  }
+  if (u.armL && u.armR) {
+    const swing = gait*step*.42*amount;
+    u.armL.rotation.x = ease(u.armL.rotation.x,-swing);
+    u.armR.rotation.x = ease(u.armR.rotation.x,swing);
+    const pose = celebrating ? -.61 + Math.sin(cheer*10)*.20 : .92 + gait*.045;
+    if (u.sharedModel) {
+      u.armL.rotation.z = ease(u.armL.rotation.z,pose);
+      u.armR.rotation.z = ease(u.armR.rotation.z,-pose*.83);
+    } else {
+      u.armL.rotation.z = ease(u.armL.rotation.z,celebrating ? -.95 : 0);
+      u.armR.rotation.z = ease(u.armR.rotation.z,celebrating ? .95 : 0);
+    }
   }
 }
 
@@ -870,10 +909,14 @@ function frame() {
     player.facing = Math.sin(t * 0.9) * 0.7;
   }
 
-  if (player.group) { placePlayer(); animateCharacter(dt, moving); }
+  const celebrating = state.phase === 'result' && nowMs < celebrationEnds;
+  if (player.group?.visible) {
+    placePlayer();
+    animateCharacter(player.group, dt, moving, celebrating);
+  }
   if (raceAvatar.visible) {
     raceAvatar.position.set(player.x, 0, player.z);
-    raceAvatar.rotation.z = moving ? Math.sin(t * 12) * .1 : 0;
+    animateCharacter(raceAvatar, dt, moving, celebrating);
   }
   updateCamera(dt);
   updateArena();

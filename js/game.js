@@ -322,6 +322,7 @@ function loadArena(id) {
     const loader = new THREE.GLTFLoader();
     arenaLoads.set(id, loader.loadAsync('models/' + id + '.glb').then(gltf => {
       const model = gltf.scene;
+      if(id === 'inflammation') prepareInflammation(model);
       model.visible = activeMap === id;
       scene.add(model);
       arenaModels[id] = model;
@@ -344,7 +345,36 @@ function showMap(id) {
   raceAvatar.visible = id === 'race';
   player.group.visible = id !== 'race';
 }
+function prepareInflammation(model) {
+  const handles = {};
+  for(const [name,position] of [
+    ['flow_wheel',[-7.3,1.91,7]],['junction_lever',[0,1.33,7]],['mediator_dial',[7.3,1.85,7]]
+  ]) {
+    const part=model.getObjectByName(name);
+    if(!part)continue;
+    const pivot=new THREE.Group();
+    pivot.position.set(...position);
+    model.add(pivot);
+    pivot.add(part);
+    part.position.set(...position.map(value=>-value));
+    handles[name]=pivot;
+  }
+  model.userData.inflammationHandles=handles;
+}
 function updateArena(dt) {
+  if(activeMap === 'inflammation') {
+    const model=arenaModels.inflammation;
+    const values=model?.userData.inflammationValues || [25,25,25];
+    const handles=model?.userData.inflammationHandles || {};
+    const blend=reducedMotion.matches?1:1-Math.exp(-9*dt);
+    if(handles.flow_wheel && !reducedMotion.matches) handles.flow_wheel.rotation.z-=dt*(.25+values[0]*.023);
+    if(handles.junction_lever) handles.junction_lever.rotation.x+=((values[1]-50)*.009-handles.junction_lever.rotation.x)*blend;
+    if(handles.mediator_dial) handles.mediator_dial.rotation.z+=((values[2]-50)*.023-handles.mediator_dial.rotation.z)*blend;
+    for(let i=0;i<4;i++){
+      const swelling=model?.getObjectByName('swelling_'+i);
+      if(swelling)swelling.scale.y+=(.70+values[1]*.007-swelling.scale.y)*blend;
+    }
+  }
   if(activeMap === 'barriers') {
     const model=arenaModels.barriers;
     for(const target of model?.userData.timelineTargets || []) {
@@ -658,6 +688,7 @@ function startMission() {
     symbolTexture,
     onVisual:values=>{
       const model=arenaModels[activeMap];
+      if(activeMap === 'inflammation' && model) model.userData.inflammationValues=values.slice();
       if(activeMap === 'barriers' && model) {
         const positions=[-8.16,-2.72,2.72,8.16];
         model.userData.timelineTargets=values.map((card,index)=>({

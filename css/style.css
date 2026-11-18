@@ -107,7 +107,6 @@
   .cellGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   #challengeChoices.cellGrid button { border-radius: 50%; background: #e9caff; min-height: 44px; }
   #challengeChoices.cellGrid button[aria-pressed="true"] { background: #ffc45e; box-shadow: inset 0 0 0 2px #794d17; }
-  #confirmTargets { margin-top: 10px; }
   #standings small { display: block; margin-bottom: 8px; }
   #status:empty, #alts:empty { display: none; }
   body[data-phase="quiz"] #qpanel, body[data-phase="challenge"] #qpanel { display: none; }

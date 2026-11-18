@@ -43,9 +43,13 @@ function submit(room, id, body, now) {
   if (room.phase !== 'playing' || body.stage !== room.stage || now < room.startAt || now >= room.closeAt) return false;
   if (!room.players.some(p => p.id === id) || room.submissions[id]) return false;
   const stage = config.stages[room.stage];
+  if (stage.id === 'targets' && now < room.startAt + config.targetSeconds * 1000) {
+    throw fail(409, 'Aguarde o fim da inspeção para responder.');
+  }
   const answer = ['A','B','C','D','E'].includes(body.answer) ? body.answer : null;
-  const correct = answer === stage.correct;
-  const result = { answer, raceMs: null, place: null, practical: 0, quiz: correct ? config.quizPoints : 0 };
+  const withinQuiz = stage.id !== 'targets' || now < room.startAt + (config.targetSeconds + config.quizSeconds) * 1000;
+  const correct = withinQuiz && answer === stage.correct;
+  const result = { answer:withinQuiz ? answer : null, raceMs: null, place: null, practical: 0, quiz: correct ? config.quizPoints : 0 };
   if (stage.id === 'factory') {
     const remaining = Number.isFinite(body.selectedAt) ? Math.min(config.roundSeconds, Math.max(0, body.selectedAt)) : 0;
     result.quiz = correct ? Math.round(config.minPoints + (config.maxPoints - config.minPoints) * remaining / config.roundSeconds) : 0;
@@ -57,6 +61,7 @@ function submit(room, id, body, now) {
     const marks = Array.isArray(body.marks) ? body.marks.slice(0, 20).filter(n => Number.isInteger(n) && n >= 0 && n < 20) : [];
     const marked = new Set(marks);
     const infected = makeTargetPuzzle(room.id).infected;
+    if (marked.size > infected.size) throw fail(400, 'Há mais marcações que o limite de alvos da inspeção.');
     const hits = [...marked].filter(index => infected.has(index)).length;
     result.inspection = { hits, errors:marked.size-hits, missed:infected.size-hits };
     result.practical = scoreTargets(marked, infected, config.practicalPoints);

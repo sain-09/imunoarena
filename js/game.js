@@ -653,13 +653,15 @@ function showTargets() {
   clearMarkers();
   setPhase('playing');
   const puzzle = makeTargetPuzzle(room.id);
-  $('qtext').textContent = 'Recife celular';
+  state.targetLimit = puzzle.infected.size;
+  nearestCell = null;
+  $('qtext').textContent = 'Encontre as ' + state.targetLimit + ' células infectadas';
   const icon = symbolTexture(puzzle.marker,'#24464e');
   $('fragmentIcon').src = icon.image.toDataURL();
   icon.dispose();
   $('fragmentName').textContent = puzzle.marker;
   $('fragmentPanel').classList.remove('hidden');
-  $('status').textContent = 'Fragmento ' + puzzle.marker + ' · Aproxime-se de uma célula para inspecioná-la.';
+  $('status').textContent = 'Inspeção: até ' + CONFIG.practicalPoints + ' pontos. A pergunta abre ao fim do tempo.';
   puzzle.cells.forEach((symbol,index) => {
     const [x,z] = CELL_PODS[index];
     const map = symbolTexture(symbol,'#24464e');
@@ -683,23 +685,25 @@ function scanCells() {
     marker.sprite.material.color.setHex(state.marks.has(marker.index) ? 0xffc66d : 0xffffff);
     if(distance < nearestDistance) { nearestDistance = distance; nearestCell = marker; }
   }
-  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + ' células marcadas';
+  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + '/' + state.targetLimit + ' marcadas' + (state.marks.size === state.targetLimit ? ' · Desmarque para trocar uma escolha.' : ' · Busque o fragmento indicado.');
   const button = $('scanCell');
-  button.disabled = !nearestCell;
+  const selected = nearestCell && state.marks.has(nearestCell.index);
+  button.disabled = !nearestCell || (!selected && state.marks.size >= state.targetLimit);
   button.textContent = nearestCell && state.marks.has(nearestCell.index) ? 'Desmarcar' : 'Marcar célula';
 }
 function toggleCell() {
   if(state.phase !== 'playing' || activeMap !== 'targets' || !nearestCell || performance.now() >= state.deadline) return;
   const index = nearestCell.index;
   if(state.marks.has(index)) state.marks.delete(index);
-  else state.marks.add(index);
+  else {
+    if (state.marks.size >= state.targetLimit) return;
+    state.marks.add(index);
+  }
   nearestCell.pulse = 1;
   scanCells();
 }
-function confirmTargets() {
-  if(state.phase === 'playing' && activeMap === 'targets') showQuiz();
-}
 function showQuiz() {
+  if (activeMap === 'targets' && classroom.now() < room.startAt + CONFIG.targetSeconds * 1000) return;
   clearMarkers();
   resetInput();
   setPhase('quiz');
@@ -708,7 +712,7 @@ function showQuiz() {
   $('challenge').dataset.theme = currentStage().id;
   $('challengeHelp').textContent = currentStage().id === 'race'
     ? (state.raceMs === null ? 'Tempo da corrida esgotado.' : 'Entrega concluída em ' + (state.raceMs / 1000).toFixed(2) + ' s.')
-    : 'Escolha a célula responsável por eliminar os alvos infectados.';
+    : 'Inspeção encerrada: ' + state.marks.size + '/' + state.targetLimit + ' marcações registradas. A inspeção vale até ' + CONFIG.practicalPoints + ' pontos e esta pergunta vale ' + CONFIG.quizPoints + '.';
   const choices = $('challengeChoices');
   choices.className = 'quizChoices';
   choices.replaceChildren();
@@ -725,6 +729,10 @@ function showQuiz() {
     choices.append(button);
   });
   setClock(CONFIG.quizSeconds);
+  if (activeMap === 'targets') {
+    state.deadline = performance.now() + room.startAt + (CONFIG.targetSeconds + CONFIG.quizSeconds) * 1000 - classroom.now();
+    updateClock(performance.now());
+  }
 }
 
 function finishAttempt(answer) {
@@ -1031,11 +1039,10 @@ function frame() {
     } else {
       showQuiz();
     }
-  } else if (state.phase === 'challenge' || state.phase === 'quiz') {
+  } else if (state.phase === 'quiz') {
     updateClock(nowMs);
     if (state.remaining <= 0) {
-      if (state.phase === 'challenge') confirmTargets();
-      else finishAttempt(null);
+      finishAttempt(null);
     }
   } else if (state.phase === 'menu') {
     player.facing = Math.sin(t * 0.9) * 0.7;
@@ -1133,7 +1140,6 @@ $('startBtn').addEventListener('click', () => {
 $('againBtn').addEventListener('click', () => {
   classroom.send(room.stage === CONFIG.stages.length - 1 ? 'reset' : 'next');
 });
-$('confirmTargets').addEventListener('click', confirmTargets);
 $('scanCell').addEventListener('click', toggleCell);
 window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
 classroom.setPositionSource(() => {

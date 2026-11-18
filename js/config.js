@@ -30,7 +30,7 @@ const IMUNO_CONFIG = {
     },
     {
       id: 'targets', title: 'Alvo infectado',
-      goal: 'Explore o recife, aproxime-se das células e marque as que exibem o fragmento viral indicado.',
+      goal: 'Encontre as sete células com o fragmento indicado. Você pode trocar marcações até o tempo acabar. A pergunta abre ao fim da inspeção.',
       text: 'Qual célula reconhece e destrói células infectadas por vírus?',
       options: ['Hemácia', 'Plaqueta', 'Linfócito T citotóxico', 'Eosinófilo', 'Basófilo'],
       correct: 'C',

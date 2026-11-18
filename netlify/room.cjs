@@ -82,7 +82,7 @@ function beginQuiz(room,id,body,now) {
     stage.id==='patrol'?new Set([...(Array.isArray(m.intercepts)?m.intercepts:[]),...(Array.isArray(m.escaped)?m.escaped:[])].filter(n=>Number.isInteger(n)&&n>=0&&n<9)).size===9:
     stage.id==='barriers'?Array.isArray(m.order)&&new Set(m.order).size===4&&m.order.every(n=>Number.isInteger(n)&&n>=0&&n<4):
     stage.id==='vaccine'?Array.isArray(m.links)&&new Set(m.links).size===4&&m.links.every(n=>Number.isInteger(n)&&n>=0&&n<4):
-    stage.id==='inflammation'?Array.isArray(m.confirmed)&&[0,1,2].every(n=>m.confirmed.includes(n)):
+    stage.id==='inflammation'?(m.mode==='samples'?Array.isArray(m.samples)&&[0,1,2].every(n=>m.samples.includes(n)):Array.isArray(m.confirmed)&&[0,1,2].every(n=>m.confirmed.includes(n))):
     stage.id==='memory'?Array.isArray(m.answers)&&m.answers.length===6&&m.answers.every(n=>typeof n==='boolean'):false;
   if(duration&&now<room.startAt+duration*1000&&!complete)throw fail(409,'Conclua os objetivos do mapa antes da pergunta.');
   room.quizStarts[id]={at:now,marks,mission:m};return true;

@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
-const {makeMission}=require('../js/missions.js'),config=require('../js/config.js'),engine=require('../netlify/room.cjs');
+const {makeMission,scoreMission}=require('../js/missions.js'),config=require('../js/config.js'),engine=require('../netlify/room.cjs');
 class Part{constructor(geometry,material){this.geometry=geometry;this.material=material;this.children=[];this.position={set(x,y,z){Object.assign(this,{x,y,z});}};this.rotation={};this.scale={set(){}};}add(p){this.children.push(p);}traverse(fn){fn(this);this.children.forEach(p=>p.traverse(fn));}}
 class Material{constructor(properties={}){Object.assign(this,properties);this.color={setHex(){}};}dispose(){}}
 class Geometry{dispose(){}setFromPoints(){return this;}}
@@ -17,16 +17,20 @@ function run(id){const player={x:0,z:10},scene={add(){},remove(){}},button={clas
  assert.ok(t.complete);assert.equal(t.m.finish().intercepts.length,9);t.m.dispose();
 }
 {
+ const t=run('vaccine');t.visit(-4.7,4.2);assert.equal(t.m.finish().links.length,0);t.m.dispose();
+}
+{
  const t=run('vaccine');for(const [x,z] of [[-4.7,-4.5],[4.7,-4.5],[4.7,4.2],[-4.7,4.2]])t.visit(x,z);
  assert.ok(t.complete);assert.deepEqual(Array.from(t.m.finish().links),[0,1,2,3]);t.m.dispose();
 }
 {
- const t=run('inflammation');for(const x of [-7.3,0,7.3]){Object.assign(t.player,{x,z:7});t.m.update();t.plus.onclick();t.m.interact();}
- assert.ok(t.complete);assert.deepEqual(Array.from(t.m.finish().values),[30,30,30]);t.m.dispose();
+ const t=run('inflammation');
+ for(const [x,z] of [[-8,0],[-1,-.5],[6.7,-1.5]]){t.visit(x,z);t.visit(x===-8?-1:-8,0);t.visit(0,7);}
+ assert.ok(t.complete);assert.deepEqual(Array.from(t.m.finish().samples),[0,1,2]);assert.equal(scoreMission('inflammation','test',t.m.finish()).points,700);t.m.dispose();
 }
 {
- const t=run('memory');t.visit(-4.7,7.3);assert.equal(t.complete,false);t.time=5;
- for(let i=0;i<6;i++){t.time=5+i*2;t.visit(i%2?-4.7:4.7,7.3);}
+ const t=run('memory');t.visit(-4.7,7.3);assert.equal(t.complete,false);t.visit(0,3.1);t.time=5;
+ for(let i=0;i<6;i++){t.time=5+i*2;Object.assign(t.player,{x:0,z:3.1});t.m.update();(i%2?t.minus:t.plus).onclick();}
  assert.ok(t.complete);assert.equal(t.m.finish().answers.length,6);t.m.dispose();
 }
 function reef(delay){let r=engine.empty(),now=1000;const act=(action,v={})=>{r=engine.apply(r,'a',{action,room:r.id,stage:r.stage,present:true,...v},now).room;};act('join',{name:'A'});r.stage=2;act('start');while(now<r.startAt+1000){now+=1000;act('read');}

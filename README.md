@@ -29,9 +29,9 @@ Cada prova começa com uma explicação e largada sincronizada de 25 segundos, c
 
 4. **Patrulha em alerta.** Caminhe até os invasores que avançam para pele, pulmão e intestino. Neutralize-os por proximidade antes de atingirem o tecido. São três grupos e nove invasores; os que escapam reduzem o aproveitamento da defesa.
 5. **Primeira linha.** Carregue as peças dos acontecimentos no mapa e leve-as aos quatro nichos numerados. Os modelos se deslocam com o personagem e ficam nas posições escolhidas. É possível pegar uma peça colocada usando o nicho quando estiver carregando outra peça.
-6. **Escola da imunidade.** Transporte o sinal luminoso pelas quatro estações na sequência dos efeitos da vacinação. O trajeto escolhido fica marcado no piso. A ordem das visitas determina o aproveitamento.
-7. **Vaso em alerta.** Vá fisicamente à roda de fluxo, à alavanca das junções e ao mostrador de mediadores. Cada mecanismo mostra sua referência; ajuste pelos botões contextuais e fixe o resultado no local.
-8. **O invasor voltou.** Observe a assinatura inicial por cinco segundos. Depois caminhe até o selo para registrar o mesmo agente ou até a comporta para registrar um agente diferente. São seis encontros, sem escolhas em card.
+6. **Caminho da vacina.** Só o próximo destino recebe uma marcação. Pegue o sinal na primeira estação e leve-o às próximas seguindo a linha verde. Não é necessário escolher entre quatro destinos nem memorizar uma ordem de botões. As quatro entregas e o tempo de conclusão compõem a prática.
+7. **Investigação do inchaço.** Colete plasma em um dos três vazamentos azuis e leve o frasco à bancada de análise. Repita até analisar as três amostras. Não há controles numéricos ou valores para reproduzir. A coleta representa a investigação da saída de líquido dos vasos, e não o fechamento dos vasos.
+8. **Reconheça o invasor.** Vá até o projetor e toque em Observar vírus. Após cinco segundos de observação, aparecem seis vírus. No próprio projetor, use Já vi este vírus ou É um vírus novo. Não é necessário correr entre dois dispositivos. Aparência e tipo A/B/C/D identificam o agente, sem depender somente da cor.
 
 As cinco atividades usam joystick, tecla E no computador e um botão de interação que só funciona perto do objeto. Não há painel central de alternativas para realizar a prática. O cenário permanece visível, com instruções curtas no HUD e identificação dos objetos no próprio mapa. As práticas novas duram até 120 segundos e registram a conclusão individual e abrem a pergunta para todos assim que a turma termina ou acaba o prazo. O bônus de rapidez da prática multiplica o aproveitamento por `0,65 + 0,35 × fração de tempo restante`: agir rápido com erros não garante a pontuação máxima.
 
@@ -90,3 +90,7 @@ As explicações usam texto escuro sobre fundos claros, com contexto e comandos 
 A troca de rodada encerra o controlador da atividade anterior e descarta o estado de espera antigo antes de carregar o próximo cenário. Comandos de entrada ou avanço clicados durante uma consulta ficam na fila. Uma exceção ao desenhar a tela é identificada como erro visual e não reenvia uma operação já aceita pelo servidor; falhas temporárias de rede continuam com reconexão automática.
 
 A sequência completa das oito fases foi percorrida em dois contextos Edge/WebGL com backend local de teste. A verificação visual dos cards mediu contraste acima de 7:1 nos dois blocos de explicação, tanto em 390×844 quanto em 844×390, e confirmou a opção de movimento reduzido. Aparelhos físicos e a hospedagem publicada continuam exigindo validação após o deploy.
+
+### Objetivos guiados das fases 6–8
+
+A fase 6 sinaliza apenas o próximo destino; destinos incorretos não consomem uma tentativa. A fase 7 permite carregar uma amostra por vez e mantém a linha apontando para a bancada durante o transporte. Na fase 8, a observação inicial só começa quando o jogador a inicia no projetor, e as duas respostas ficam disponíveis por proximidade após os cinco segundos. As três fases continuam registrando conclusão e acerto da prática no servidor, com bônus por rapidez e pergunta liberada para a turma quando todos terminam.

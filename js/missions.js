@@ -53,6 +53,7 @@ function scoreMission(id, roomId, payload, maxPoints = 700) {
     const count=mission.sources.filter((_,i)=>links[i]===i).length;
     fraction=count/4;detail=count+'/4 ligações corretas';
   }else if(id==='inflammation'){
+    if(data.mode==='samples'){const n=new Set((Array.isArray(data.samples)?data.samples:[]).filter(n=>Number.isInteger(n)&&n>=0&&n<3)).size;return {points:Math.round(n/3*maxPoints),detail:n+'/3 amostras de plasma analisadas'};}
     const values=Array.isArray(data.values) ? data.values : [];
     fraction=mission.reference.reduce((sum,value,i)=>{
       const current=values[i];

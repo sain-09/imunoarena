@@ -104,9 +104,9 @@ const IMUNO_CONFIG = {
     },
     {
       "id": "vaccine",
-      "title": "Escola da imunidade",
+      "title": "Caminho da vacina",
       "seconds": 120,
-      "goal": "Percorra as quatro estações na ordem dos efeitos da vacinação. Aproxime-se e transporte o sinal: antígeno, ativação, expansão e memória.",
+      "goal": "Siga a linha verde. Pegue o sinal na estação marcada e leve-o ao próximo destino iluminado. Repita até completar as quatro estações.",
       "text": "Qual é o objetivo principal da vacinação?",
       "options": [
         "Provocar a doença em sua forma mais grave.",
@@ -117,13 +117,13 @@ const IMUNO_CONFIG = {
       ],
       "correct": "C",
       "explanation": "A vacinação apresenta antígenos ou instruções para produzi-los e estimula respostas protetoras e memória imunológica.",
-      "context": "A vacina apresenta um antígeno ou instruções para produzi-lo. Isso leva ao reconhecimento, à expansão de células específicas e à formação de memória. O sinal luminoso representa essa sequência; não é uma dose transportada entre órgãos."
+      "context": "Você vai acompanhar, passo a passo, o caminho da vacinação: antígeno, ativação da defesa, expansão de células específicas e memória. Só um destino fica marcado por vez. O sinal luminoso representa essa sequência, não uma dose andando entre órgãos."
     },
     {
       "id": "inflammation",
-      "title": "Vaso em alerta",
+      "title": "Investigação do inchaço",
       "seconds": 120,
-      "goal": "Vá aos três mecanismos do vaso. Compare o valor de referência no local, ajuste com Diminuir/Aumentar e fixe cada ajuste.",
+      "goal": "Vá a um vazamento azul e toque em Coletar plasma. Leve o frasco azul à bancada e toque em Analisar amostra. Faça isso com as três amostras.",
       "text": "Vermelhidão, calor, dor e inchaço durante a inflamação acontecem principalmente devido a quê?",
       "options": [
         "Diminuição do fluxo sanguíneo.",
@@ -134,13 +134,13 @@ const IMUNO_CONFIG = {
       ],
       "correct": "B",
       "explanation": "O aumento do fluxo contribui para calor e vermelhidão. A saída de líquido favorece inchaço. Mediadores e pressão no tecido contribuem para a dor.",
-      "context": "Durante a inflamação, os vasos mudam seu fluxo e deixam sair mais líquido, enquanto mediadores coordenam a resposta. Os mecanismos representam essas mudanças. Reproduza os valores do tecido de referência em cada mecanismo."
+      "context": "Na inflamação, parte do líquido do sangue sai dos vasos e chega ao tecido, contribuindo para o inchaço. Você vai coletar esse plasma e levar para análise. Não é preciso regular números ou adivinhar valores."
     },
     {
       "id": "memory",
-      "title": "O invasor voltou",
+      "title": "Reconheça o invasor",
       "seconds": 120,
-      "goal": "Memorize a assinatura inicial por cinco segundos. Em cada encontro, caminhe ao selo se for o mesmo agente, ou à comporta se for outro. Toque para registrar.",
+      "goal": "Siga a linha até o projetor e toque em Observar vírus. Memorize por cinco segundos. Depois, em cada encontro, toque em Já vi este vírus ou É um vírus novo.",
       "text": "Por que a resposta costuma ser mais rápida e eficiente no segundo contato com o mesmo microrganismo?",
       "options": [
         "As hemácias armazenam informações sobre vírus.",
@@ -151,7 +151,7 @@ const IMUNO_CONFIG = {
       ],
       "correct": "D",
       "explanation": "Células de memória específicas permitem uma resposta adaptativa mais rápida e eficiente quando o mesmo antígeno é encontrado novamente.",
-      "context": "Células de memória reconhecem antígenos encontrados antes. O desenho no projetor é uma assinatura molecular ilustrativa do agente. Memorize-o e compare cada reencontro: mesmo agente no selo, diferente na comporta."
+      "context": "A memória imunológica permite reconhecer um agente encontrado anteriormente. Primeiro você observa um vírus; depois compara os seis que aparecem com aquele primeiro. Observe a aparência e o tipo A, B, C ou D. Você não precisa correr entre dois dispositivos para responder."
     }
   ]
 };

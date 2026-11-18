@@ -97,7 +97,7 @@ function symbolTexture(symbol, color) {
     const path = points => points.forEach(([x,y],i) => i ? g.lineTo(x,y) : g.moveTo(x,y));
     g.beginPath();
     if(symbol.startsWith('fragmento viral')) {
-      const color=symbol.includes('azul')?'#48bce8':symbol.includes('verde')?'#59d89e':'#bc7ce5';
+      const color=symbol.includes('laranja')?'#efa044':symbol.includes('azul')?'#48bce8':symbol.includes('verde')?'#59d89e':'#bc7ce5';
       g.strokeStyle=color;g.fillStyle=color;
       for(let i=0;i<8;i++){const a=i*Math.PI/4;g.beginPath();g.moveTo(64+Math.cos(a)*24,64+Math.sin(a)*24);g.lineTo(64+Math.cos(a)*40,64+Math.sin(a)*40);g.stroke();g.beginPath();g.arc(64+Math.cos(a)*40,64+Math.sin(a)*40,6,0,Math.PI*2);g.fill();}
       g.beginPath();g.arc(64,64,28,0,Math.PI*2);g.fill();g.fillStyle='#fff6e4';g.beginPath();g.arc(56,56,7,0,Math.PI*2);g.fill();return;
@@ -416,7 +416,7 @@ function updateArena(dt) {
       }
       for(let i=0;i<4;i++) {
         const symbol=model.getObjectByName('memory_symbol_'+i);
-        if(symbol)symbol.scale.setScalar(i===signature?1:0);
+        if(symbol)symbol.scale.setScalar(i===signature&&!model.userData.hideMemorySymbols?1:0);
       }
       const seal=model.getObjectByName('memory_seal');
       const gate=model.getObjectByName('memory_gate');

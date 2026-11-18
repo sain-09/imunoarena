@@ -82,6 +82,7 @@ function createMissionPanel({element, stage, roomId, duration, elapsed, symbolTe
       status.textContent=selected<0?'Toque no cartão que deseja mover.':'Toque na posição de destino.';
     }
     paint();
+    onVisual(payload.order);
     heading('Sequência didática do início de cada processo. As respostas inata e adaptativa podem se sobrepor.');
   }else if(stage.id==='vaccine'){
     payload={links:[null,null,null,null]};

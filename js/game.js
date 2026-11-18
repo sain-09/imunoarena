@@ -344,7 +344,14 @@ function showMap(id) {
   raceAvatar.visible = id === 'race';
   player.group.visible = id !== 'race';
 }
-function updateArena() {
+function updateArena(dt) {
+  if(activeMap === 'barriers') {
+    const model=arenaModels.barriers;
+    for(const target of model?.userData.timelineTargets || []) {
+      const tile=model.getObjectByName('specimen_'+target.card);
+      if(tile)tile.position.lerp(target.position,reducedMotion.matches?1:1-Math.exp(-10*dt));
+    }
+  }
   const model = arenaModels.race;
   if (activeMap !== 'race' || !model) return;
   GATES.forEach((gate,i) => {
@@ -651,6 +658,12 @@ function startMission() {
     symbolTexture,
     onVisual:values=>{
       const model=arenaModels[activeMap];
+      if(activeMap === 'barriers' && model) {
+        const positions=[-8.16,-2.72,2.72,8.16];
+        model.userData.timelineTargets=values.map((card,index)=>({
+          card,position:new THREE.Vector3(positions[index]-positions[card],.86,-7.32)
+        }));
+      }
       const effect=model?.getObjectByName('mission_feedback');
       if(effect) {
         effect.rotation.y+=.18;
@@ -1101,7 +1114,7 @@ function frame() {
     animateCharacter(raceAvatar, dt, moving, celebrating);
   }
   updateCamera(dt);
-  updateArena();
+  updateArena(dt);
   animateArenaEffects(dt, t);
   updatePeers(dt);
   renderer.render(scene, camera);

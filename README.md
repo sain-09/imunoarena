@@ -36,6 +36,26 @@ As corridas têm largada comum e a classificação usa o tempo de cada jogador. 
 
 Os três cenários ficam em models/factory.glb, models/race.glb e models/targets.glb, com texturas embutidas. js/arenas.js define os limites e as colisões correspondentes.
 
-Para salas de até 16 jogadores, o movimento tenta usar um canal direto WebRTC. Redes que bloqueiam a conexão direta e salas maiores usam a função de movimento do Netlify. Pontuação e tempos continuam na função da sala.
+O movimento usa WebRTC nas oito fases, inclusive para turmas de até 40 pessoas. Até oito participantes usam conexões diretas entre si. Acima disso, o primeiro participante distribui os movimentos da turma por canais WebRTC: cada colega mantém uma conexão com ele, em vez de abrir uma conexão com cada celular. Para turmas grandes, abra a sala no computador do professor e mantenha essa aba visível durante a partida. Se esse navegador ficar indisponível, o caminho HTTP continua funcionando, com maior atraso.
+
+As posições usam pacotes binários de 24 bytes por jogador, enviados a cada 50 ms durante o movimento e com confirmação de presença a cada 250 ms quando parado. Pacotes fora de ordem são descartados, inclusive quando chegam pelo caminho HTTP depois de uma posição mais recente recebida por WebRTC. As conexões começam a ser negociadas no lobby, usam candidatos ICE progressivos e tentam se recuperar após uma falha. O envio descarta amostras quando o canal está congestionado, para evitar acumular movimentos antigos.
+
+A função de movimento HTTP é uma alternativa para conexões indisponíveis. Ela consulta mais frequentemente os colegas que estão sem canal direto e deixa de buscar no armazenamento os que já estão chegando por WebRTC. Pontuação e tempos continuam na função da sala.
+
+### Redes que bloqueiam WebRTC direto
+
+O projeto aceita um serviço TURN, que retransmite o tráfego WebRTC quando a conexão direta é bloqueada. Esse serviço precisa ser contratado ou hospedado separadamente; o projeto não inclui credenciais e não cria um servidor TURN no Netlify. Sem ele, certas redes continuarão dependendo do caminho HTTP, que pode apresentar atraso.
+
+No Netlify, configure estas variáveis no escopo de Functions e publique novamente:
+
+- `IMUNO_TURN_URLS`: endereços do seu serviço separados por vírgulas, por exemplo `turn:seu-servidor:3478,turns:seu-servidor:5349`.
+- `IMUNO_TURN_SECRET`: segredo compartilhado de um servidor compatível com TURN REST, como coturn. A função gera credenciais válidas por uma hora, sem entregar o segredo ao navegador.
+- Se o serviço fornecer usuário e senha fixos, use `IMUNO_TURN_USERNAME` e `IMUNO_TURN_PASSWORD` no lugar de `IMUNO_TURN_SECRET`. As credenciais TURN são necessariamente entregues aos clientes autorizados; não use chaves administrativas do provedor nesses campos.
+
+Referências: [TURN e bloqueios de rede](https://developers.cloudflare.com/realtime/turn/), [variáveis de ambiente nas Functions](https://docs.netlify.com/build/functions/environment-variables/).
+
+### Verificação
+
+`npm test` executa simulações de 2, 8 e 40 jogadores, troca pelas oito fases, reconexão, descarte de duplicatas, negociação ICE e emissão de credenciais TURN temporárias. Os testes não medem a latência real nem o desempenho gráfico dos celulares. Depois de publicar uma mudança no protocolo, todos devem recarregar a página antes de entrar na sala. Teste com dois celulares e depois com a turma, tanto na mesma rede quanto entre Wi-Fi e dados móveis.
 
 Os cenários das provas 4–8 usam plantas e objetos próprios. Patrulha reúne três tecidos, Primeira Linha mostra um corte em camadas da pele, Vacinação usa um pavilhão hexagonal, Inflamação mostra uma janela do vaso e Memória usa um arquivo circular de reconhecimento.

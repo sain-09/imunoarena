@@ -27,16 +27,18 @@ export default async function handler(request) {
   const arena = arenaData.ARENAS[config.stages[room.stage]?.id];
   if (!arena) return reply({ positions: [] });
   const p = body.position;
+  const exclude=new Set(Array.isArray(body.exclude)?body.exclude.filter(Number.isInteger):[]);
   if (p && [p.x,p.z,p.facing,p.vx,p.vz].every(Number.isFinite) &&
       Math.abs(p.x)<=arena.width+.01 && p.z>=arena.end-1.01 && p.z<=arena.start+2.01 &&
       Math.abs(p.facing)<=100 && Math.hypot(p.vx,p.vz)<=15) {
     await store.setJSON(prefix + body.id, {
       x:p.x, z:p.z, facing:p.facing, vx:p.vx, vz:p.vz,
-      char:p.char === 'female' ? 'female' : 'male', at: now
+      char:p.char === 'female' ? 'female' : 'male', at: now,
+      ...(Number.isSafeInteger(p.seq) && Number.isSafeInteger(p.epoch)?{seq:p.seq,epoch:p.epoch}:{})
     });
   }
   const positions = await Promise.all(room.players.map(async (player,key) => {
-    if (player.id === body.id || room.submissions[player.id]) return null;
+    if (player.id === body.id || room.submissions[player.id] || exclude.has(key)) return null;
     const entry = await store.get(prefix + player.id,{type:'json'});
     if (!entry || now - entry.at > freshForMs) return null;
     return { ...entry, key, name: player.name };

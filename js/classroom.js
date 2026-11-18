@@ -13,10 +13,11 @@ function connectClassroom(onUpdate, onError, onPositions) {
   let offset = 0;
   let readPosition = () => null;
   const direct = createDirectMotion(id, peer => {
-    if (readPosition()?.round === peer.round) onPositions([{...peer,direct:true,at:0}],0,peer.round);
+    if (readPosition()?.round === peer.round) onPositions([{...peer,direct:true,at:-(peer.ageMs||0)}],0,peer.round);
   });
   setInterval(() => direct.tick(),300);
   let previousDirect;
+  let motionStamp=null;
   setInterval(() => {
     const position = document.hidden ? null : readPosition();
     if (!position || room?.phase !== 'playing' || room.submitted) { previousDirect = null; return; }
@@ -26,7 +27,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
     const vx = old ? (position.x-old.x)/dt : 0, vz = old ? (position.z-old.z)/dt : 0;
     const clamp = Math.min(1,10/Math.max(.001,Math.hypot(vx,vz)));
     previousDirect = {...position,now};
-    direct.send({...position,vx:vx*clamp,vz:vz*clamp});
+    motionStamp=direct.send({...position,vx:vx*clamp,vz:vz*clamp});
   },50);
 
   async function send(action, values = {}) {
@@ -83,12 +84,13 @@ function connectClassroom(onUpdate, onError, onPositions) {
     const vz = sameStage ? (position.z-previous.z)/elapsed : 0;
     const scale = Math.min(1,10/Math.max(.001,Math.hypot(vx,vz)));
     previous = { ...position, roomId, stage, sent };
-    let delay = room.players.length > 16 ? 650 : 350;
+    const exclude=direct.covered();
+    let delay = exclude.length===room.players.length-1 ? 700 : 200;
     try {
       const response = await fetch('/.netlify/functions/movimento', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id,room:roomId,stage,position:{...position,vx:vx*scale,vz:vz*scale}}),
-        signal:AbortSignal.timeout(2200)
+        body:JSON.stringify({id,room:roomId,stage,exclude,position:{...position,...motionStamp,vx:vx*scale,vz:vz*scale}}),
+        signal:AbortSignal.timeout(1500)
       });
       if (!response.ok) throw new Error('Movimento temporariamente indisponível');
       const data = await response.json();

@@ -1255,6 +1255,10 @@ const classroom = connectClassroom(handleRoom, error => {
   const receivedAt = performance.now();
   for (const peer of positions) {
     const previous = livePeers.get(peer.key);
+    if(previous && Number.isSafeInteger(peer.seq) && Number.isSafeInteger(previous.seq) &&
+        peer.epoch===previous.epoch && peer.seq<=previous.seq)continue;
+    if(previous && Number.isSafeInteger(peer.epoch) && Number.isSafeInteger(previous.epoch) &&
+        peer.epoch!==previous.epoch && ((peer.epoch-previous.epoch)>>>0)>0x7fffffff)continue;
     if (!peer.direct && previous?.direct && receivedAt-previous.receivedAt < 750) continue;
     livePeers.set(peer.key, {...peer, receivedAt, age:Math.max(0,(serverNow-peer.at)/1000)});
   }

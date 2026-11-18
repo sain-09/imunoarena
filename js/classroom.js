@@ -8,9 +8,16 @@ function connectClassroom(onUpdate, onError, onPositions) {
   let busy = false;
   let queued = null;
   let quizQueued=null;
+  let commandQueued=null;
   let retryAt = 0;
   let offset = 0;
   let readPosition = () => null;
+  function notify(snapshot){
+    try{onUpdate(snapshot);}catch(error){
+      console.error('Erro ao atualizar a tela do jogo:',error);
+      onError('Não foi possível atualizar a tela. '+error.message);
+    }
+  }
   const direct = createDirectMotion(id, peer => {
     if (readPosition()?.round === peer.round) onPositions([{...peer,direct:true,at:-(peer.ageMs||0)}],0,peer.round);
   });
@@ -30,16 +37,21 @@ function connectClassroom(onUpdate, onError, onPositions) {
   },50);
 
   async function send(action, values = {}) {
-    if (busy) return false;
+    if (busy) {
+      if(['join','start','next','reset'].includes(action))commandQueued={action,values};
+      return false;
+    }
     busy = true;
     const version=revision;
     const start = Date.now();
+    let status=0;
     try {
       const response = await fetch('/.netlify/functions/sala', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action, room: room?.id, stage: room?.stage, present:entered&&!document.hidden, ...values }),
         signal: AbortSignal.timeout(8000)
       });
+      status=response.status;
       const data = await response.json();
       if(version!==revision)return false;
       if (!response.ok) throw new Error(data.error);
@@ -51,14 +63,18 @@ function connectClassroom(onUpdate, onError, onPositions) {
       if(data.joined)direct.sync(data);else direct.close();
       if (queued && (room.id !== queued.room || room.stage !== queued.stage || room.submitted || room.phase !== 'playing')) queued = null;
       if(quizQueued&&(room.id!==quizQueued.room||room.stage!==quizQueued.stage||room.submitted||room.phase!=='playing'))quizQueued=null;
-      onUpdate(data);
+      notify(data);
       return true;
     } catch (error) {
       if(version!==revision)return false;
-      onError(error instanceof SyntaxError ? 'Não foi possível acessar a sala. Confira a conexão e a publicação da função no Netlify.' : 'Falha na sala. ' + error.message);
+      if(status===0||status>=500){retryAt=Date.now()+1000;onError('Reconectando à sala. Uma nova tentativa será feita automaticamente.');}
+      else onError(error instanceof SyntaxError ? 'Resposta inválida da sala. Recarregue a página após a publicação.' : error.message);
       return false;
     } finally {
-      if(version===revision)busy = false;
+      if(version===revision){
+        busy=false;
+        if(commandQueued){const command=commandQueued;commandQueued=null;Promise.resolve().then(()=>send(command.action,command.values));}
+      }
     }
   }
 
@@ -114,7 +130,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
   setTimeout(pollMotion, 200);
   function leave() {
     const participating=entered;
-    entered=false;revision++;busy=false;queued=null;quizQueued=null;direct.close();
+    entered=false;revision++;busy=false;queued=null;quizQueued=null;commandQueued=null;direct.close();
     if(!participating)return;
     const payload=JSON.stringify({id,room:room?.id,stage:room?.stage,action:'leave'});
     let sent=false;
@@ -122,7 +138,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
     if(!sent) {
       fetch('/.netlify/functions/sala',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(()=>{});
     }
-    if(room){room={...room,joined:false,host:false};onUpdate(room);}
+    if(room){room={...room,joined:false,host:false};notify(room);}
   }
   window.addEventListener('pagehide',leave);
   window.addEventListener('pageshow',()=>tick());

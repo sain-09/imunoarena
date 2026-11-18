@@ -615,6 +615,13 @@ function waitForScores() {
 }
 
 function handleRoom(updated) {
+  const changedRound=room&&roundKey(room)!==roundKey(updated);
+  if(changedRound){
+    resetInput();hideIntro();
+    missionPanel?.dispose();missionPanel=null;missionPayload=null;
+    $('challenge').classList.add('hidden');$('result').classList.add('hidden');
+    setPhase('loading');
+  }
   if (!room || roundKey(room) !== roundKey(updated) || updated.phase !== 'playing') {
     activeRound = null;
     livePeers.clear();
@@ -667,7 +674,7 @@ function handleRoom(updated) {
   }
 
   if(room.questionAt&&!room.submitted&&activeRound===roundKey(room)&&['playing','mission','practical-wait'].includes(state.phase))showQuiz(true,true);
-  if(state.phase==='practical-wait'&&!room.submitted){$('status').textContent='Objetivos concluídos: '+room.practicalReady+'/'+room.players.length+'. A pergunta abre assim que todos terminarem, ou ao fim do prazo.';return;}
+  if(state.phase==='practical-wait'&&!room.submitted&&activeRound===roundKey(room)){$('status').textContent='Objetivos concluídos: '+room.practicalReady+'/'+room.players.length+'. A pergunta abre assim que todos terminarem, ou ao fim do prazo.';return;}
 
   if (!room.joined || room.submitted || classroom.now() >= room.closeAt) {
     waitForScores();

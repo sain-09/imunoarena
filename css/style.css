@@ -363,3 +363,52 @@ body[data-phase="playing"] #joy,body[data-phase="mission"] #joy {display:block!i
 
 #result {bottom:var(--action-bottom);max-height:calc(100dvh - 128px);}
 @media(orientation:landscape) and (max-height:600px){#challenge {top:calc(50% - 34px);max-height:calc(100dvh - 116px);}}
+
+/* Placas cartoon de leitura: tinta escura sobre papel claro. */
+#intro {--card-accent:#169f98;background:#15283eb3;backdrop-filter:blur(3px);}
+#intro[data-theme="race"] {--card-accent:#df5c4d;}
+#intro[data-theme="targets"] {--card-accent:#188a93;}
+#intro[data-theme="barriers"] {--card-accent:#c27443;}
+#intro[data-theme="vaccine"] {--card-accent:#3e68b5;}
+#intro[data-theme="memory"] {--card-accent:#6658a8;}
+#intro .intro-card {display:flex;flex-direction:column;gap:14px;width:min(94vw,680px);max-height:calc(100dvh - 26px);padding:24px 22px 16px;background:#fff8e8;border:4px solid #263652;border-radius:25px 25px 25px 9px;box-shadow:0 8px 0 #17263c,0 18px 35px #08152466;animation:lesson-arrival .48s cubic-bezier(.18,.8,.28,1.15) both;}
+#intro .intro-card::before {content:'';position:absolute;left:12px;right:12px;top:0;height:8px;background:var(--card-accent);border-radius:0 0 8px 8px;}
+.intro-copy {min-height:0;overflow:auto;overscroll-behavior:contain;text-align:left;padding:2px;}
+.intro-emblem {position:absolute;width:44px;height:44px;top:22px;right:20px;}
+#introKicker {display:table;margin:0 60px 9px 0;padding:5px 11px;border:2px solid #263652;border-radius:9px;background:#ffdb82;color:#263652;letter-spacing:.04em;font-size:12px;}
+#introTitle {color:#263652;line-height:1.12;letter-spacing:-.02em;font-size:clamp(24px,5vw,36px);padding-right:46px;margin-bottom:14px;}
+#introContext {margin:0 0 12px;padding:12px 14px;color:#173b47;background:#e3f3ef;border:2px solid #b2d5cd;border-left:6px solid var(--card-accent);border-radius:12px;font-size:clamp(15px,2.4vw,18px);line-height:1.5;}
+#introGoal {margin:0;padding:12px 14px;color:#28374a;background:#ffebbd;border:2px solid #e2c781;border-radius:12px;font-size:clamp(15px,2.4vw,18px);line-height:1.5;font-weight:700;}
+#intro .intro-footer {flex:none;gap:12px;color:#263652;justify-content:space-between;border-top:2px dashed #c2ccb9;padding-top:12px;}
+#introCount {display:inline-grid;place-items:center;min-width:42px;min-height:40px;background:#ffda76;color:#263652;border:2px solid #263652;border-radius:12px;box-shadow:0 3px #263652;font-size:23px;}
+#intro .intro-track {height:13px;border:2px solid #263652;background:#e1e9dc;border-radius:8px;}
+#introBar {background:var(--card-accent);}
+#challenge,#result,#menu {border-color:#263652;background:#fff8e8;color:#263652;box-shadow:0 7px 0 #263652,0 16px 32px #10203544;border-radius:24px 24px 24px 9px;}
+#challenge {animation:question-arrival .32s ease-out both;}
+#challenge h2,#resTitle {color:#263652;line-height:1.22;}
+#challengeHelp,#resSummary {color:#355064;line-height:1.45;}
+#challengeChoices.quizChoices {gap:9px;}
+#challengeChoices.quizChoices button {min-height:52px;background:#fff;color:#24364b;border:2px solid #536d80;border-radius:13px;box-shadow:0 3px #536d80;padding:10px 12px;line-height:1.3;animation:choice-arrival .25s ease-out backwards;transition:background .15s,box-shadow .15s;}
+#challengeChoices.quizChoices button:nth-child(2){animation-delay:.035s;}#challengeChoices.quizChoices button:nth-child(3){animation-delay:.07s;}#challengeChoices.quizChoices button:nth-child(4){animation-delay:.105s;}#challengeChoices.quizChoices button:nth-child(5){animation-delay:.14s;}
+#challengeChoices.quizChoices button:hover {background:#e5f5ed;}
+#challengeChoices.quizChoices button:active {transform:translateY(3px);box-shadow:none;}
+.quiz-letter {min-width:32px;height:32px;background:#ffda76;color:#263652;border:2px solid #263652;border-radius:10px;}
+@keyframes lesson-arrival {from{opacity:0;transform:translateY(20px) rotate(-1deg) scale(.97);}to{opacity:1;transform:translateY(0) rotate(0) scale(1);}}
+@keyframes question-arrival {from{opacity:0;transform:translate(-50%,calc(-50% + 16px)) scale(.97);}to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+@keyframes choice-arrival {from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:translateY(0);}}
+@media(orientation:landscape) and (max-height:600px){
+ #intro .intro-card {width:min(92vw,840px);padding:15px 18px 12px;gap:10px;}
+ .intro-copy {display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-items:start;}
+ #introKicker,#introTitle {grid-column:1/-1;margin-bottom:0;} #introTitle{font-size:25px;}
+ #introContext,#introGoal {font-size:14px;line-height:1.4;margin:0;padding:10px;}
+ .intro-emblem{top:16px;right:18px;width:38px;height:38px;}
+ #intro .intro-footer{padding-top:8px;}#introCount{min-height:34px;font-size:20px;}
+ #challengeChoices.quizChoices button{font-size:14px;min-height:46px;padding:7px 9px;}
+}
+@media(prefers-reduced-motion:reduce){#intro .intro-card,#challenge,#challengeChoices.quizChoices button{animation:none;transition:none;}}
+#result,#menu {animation:board-arrival .36s cubic-bezier(.18,.84,.27,1) both;}
+@keyframes board-arrival {from{opacity:0;transform:translate(-50%,14px) scale(.98);}to{opacity:1;transform:translate(-50%,0) scale(1);}}
+@media(prefers-reduced-motion:reduce){#result,#menu{animation:none;}}
+#intro .intro-card {align-items:stretch;}
+#intro .intro-copy,#intro .intro-footer {width:100%;}
+#introKicker {justify-self:start;width:fit-content;max-width:calc(100% - 60px);}

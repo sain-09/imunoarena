@@ -82,3 +82,11 @@ A câmera das fases 4–8 acompanha o personagem durante a prática, com enquadr
 Cada introdução explica o significado biológico do cenário antes dos comandos. No Recife, os pedestais representam células: os alvos exibem um ícone ilustrativo de fragmento viral igual à amostra. Proteínas próprias, membranas saudáveis e oxigênio são sinais que não devem ser marcados. O HUD identifica o sinal da célula mais próxima. Os ícones foram desenhados no próprio jogo, e não usam emojis. Ao concluir as marcações, o resultado da prática é registrado. Assim que todos os participantes conectados terminam seus objetivos, a pergunta abre para a turma, sem esperar o cronômetro original. Se alguém não concluir, ela abre ao fim do prazo. Todos têm o mesmo início e o mesmo prazo de 30 segundos; o bônus da prática usa o instante em que cada jogador concluiu.
 
 A checagem automatizada em Edge/WebGL verificou joystick nas oito fases em 390×844 e 844×390, distância da câmera nas cinco práticas e ações fora de uma área simulada de selo no rodapé. Isso não substitui teste em Safari/iPhone e Android físicos, nem mede a rede móvel ou a injeção real do selo na publicação.
+
+### Cards e troca de fase
+
+As explicações usam texto escuro sobre fundos claros, com contexto e comandos em blocos separados. Os cards têm bordas cartoon, emblema médico próprio, entrada animada, contador destacado e alternativas com aparecimento curto. A preferência do aparelho por movimento reduzido desativa essas animações. Retrato e paisagem preservam a área de leitura e o rodapé do contador.
+
+A troca de rodada encerra o controlador da atividade anterior e descarta o estado de espera antigo antes de carregar o próximo cenário. Comandos de entrada ou avanço clicados durante uma consulta ficam na fila. Uma exceção ao desenhar a tela é identificada como erro visual e não reenvia uma operação já aceita pelo servidor; falhas temporárias de rede continuam com reconexão automática.
+
+A sequência completa das oito fases foi percorrida em dois contextos Edge/WebGL com backend local de teste. A verificação visual dos cards mediu contraste acima de 7:1 nos dois blocos de explicação, tanto em 390×844 quanto em 844×390, e confirmou a opção de movimento reduzido. Aparelhos físicos e a hospedagem publicada continuam exigindo validação após o deploy.

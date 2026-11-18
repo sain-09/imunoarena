@@ -1,5 +1,5 @@
 const IMUNO_CONFIG = {
-  "introSeconds": 18,
+  "introSeconds": 25,
   "roundSeconds": 45,
   "minPoints": 100,
   "maxPoints": 1000,
@@ -33,7 +33,8 @@ const IMUNO_CONFIG = {
         "Linfócitos T citotóxicos"
       ],
       "correct": "B",
-      "explanation": "Plasmócitos são células derivadas de linfócitos B que secretam anticorpos."
+      "explanation": "Plasmócitos são células derivadas de linfócitos B que secretam anticorpos.",
+      "context": "Os linfócitos B podem se transformar em plasmócitos, células que secretam anticorpos. As estações representam tipos de células do sangue."
     },
     {
       "id": "race",
@@ -48,12 +49,13 @@ const IMUNO_CONFIG = {
         "Produzir células de defesa"
       ],
       "correct": "C",
-      "explanation": "A hemoglobina das hemácias se liga ao oxigênio nos pulmões e o libera nos tecidos."
+      "explanation": "A hemoglobina das hemácias se liga ao oxigênio nos pulmões e o libera nos tecidos.",
+      "context": "As hemácias levam oxigênio dos pulmões até os tecidos. Você fará essa entrega atravessando a corrente sanguínea."
     },
     {
       "id": "targets",
       "title": "Alvo infectado",
-      "goal": "Encontre as sete células com o fragmento indicado. Você pode trocar marcações até o tempo acabar. A pergunta abre ao fim da inspeção.",
+      "goal": "Veja o ícone viral da amostra. Explore com o joystick, aproxime-se de cada célula e marque somente as que exibem esse fragmento. Complete 7 marcações; assim que todos terminarem a inspeção, a pergunta abre para a turma.",
       "text": "Qual célula reconhece e destrói células infectadas por vírus?",
       "options": [
         "Hemácia",
@@ -63,7 +65,8 @@ const IMUNO_CONFIG = {
         "Basófilo"
       ],
       "correct": "C",
-      "explanation": "Linfócitos T citotóxicos reconhecem fragmentos virais apresentados pelas células infectadas e induzem sua morte."
+      "explanation": "Linfócitos T citotóxicos reconhecem fragmentos virais apresentados pelas células infectadas e induzem sua morte.",
+      "context": "Cada pedestal é uma célula do tecido. As infectadas exibem o fragmento viral da amostra. Você simula o reconhecimento feito por um linfócito T citotóxico. Proteínas próprias, membranas saudáveis e oxigênio não são alvos."
     },
     {
       "id": "patrol",
@@ -79,7 +82,8 @@ const IMUNO_CONFIG = {
         "Diminuição da glicose no sangue."
       ],
       "correct": "B",
-      "explanation": "Leucócitos participam da defesa do organismo. Uma quantidade reduzida pode dificultar o combate às infecções."
+      "explanation": "Leucócitos participam da defesa do organismo. Uma quantidade reduzida pode dificultar o combate às infecções.",
+      "context": "Leucócitos defendem o organismo. Nesta simulação, você representa essa defesa e protege pele, pulmão e intestino. Os vírus roxos são os invasores; alcançar e neutralizar cada um representa a ação das células de defesa. Com poucas células de defesa, fica mais difícil impedir que invasores atinjam os tecidos."
     },
     {
       "id": "barriers",
@@ -95,7 +99,8 @@ const IMUNO_CONFIG = {
         "Ambas atuam exclusivamente por meio de anticorpos."
       ],
       "correct": "C",
-      "explanation": "As barreiras e as respostas rápidas fazem parte da imunidade inata. A resposta adaptativa envolve linfócitos e reconhecimento específico. Os processos se sobrepõem no organismo."
+      "explanation": "As barreiras e as respostas rápidas fazem parte da imunidade inata. A resposta adaptativa envolve linfócitos e reconhecimento específico. Os processos se sobrepõem no organismo.",
+      "context": "A pele é uma barreira da imunidade inata. Após um corte, o agente entra; a defesa inata reage e a resposta adaptativa específica se desenvolve. Os processos podem se sobrepor. As peças mostram o começo de cada acontecimento."
     },
     {
       "id": "vaccine",
@@ -111,7 +116,8 @@ const IMUNO_CONFIG = {
         "Impedir a produção de linfócitos."
       ],
       "correct": "C",
-      "explanation": "A vacinação apresenta antígenos ou instruções para produzi-los e estimula respostas protetoras e memória imunológica."
+      "explanation": "A vacinação apresenta antígenos ou instruções para produzi-los e estimula respostas protetoras e memória imunológica.",
+      "context": "A vacina apresenta um antígeno ou instruções para produzi-lo. Isso leva ao reconhecimento, à expansão de células específicas e à formação de memória. O sinal luminoso representa essa sequência; não é uma dose transportada entre órgãos."
     },
     {
       "id": "inflammation",
@@ -127,7 +133,8 @@ const IMUNO_CONFIG = {
         "Diminuição da atividade dos leucócitos."
       ],
       "correct": "B",
-      "explanation": "O aumento do fluxo contribui para calor e vermelhidão. A saída de líquido favorece inchaço. Mediadores e pressão no tecido contribuem para a dor."
+      "explanation": "O aumento do fluxo contribui para calor e vermelhidão. A saída de líquido favorece inchaço. Mediadores e pressão no tecido contribuem para a dor.",
+      "context": "Durante a inflamação, os vasos mudam seu fluxo e deixam sair mais líquido, enquanto mediadores coordenam a resposta. Os mecanismos representam essas mudanças. Reproduza os valores do tecido de referência em cada mecanismo."
     },
     {
       "id": "memory",
@@ -143,7 +150,8 @@ const IMUNO_CONFIG = {
         "O sistema imunológico perde sua capacidade de reação."
       ],
       "correct": "D",
-      "explanation": "Células de memória específicas permitem uma resposta adaptativa mais rápida e eficiente quando o mesmo antígeno é encontrado novamente."
+      "explanation": "Células de memória específicas permitem uma resposta adaptativa mais rápida e eficiente quando o mesmo antígeno é encontrado novamente.",
+      "context": "Células de memória reconhecem antígenos encontrados antes. O desenho no projetor é uma assinatura molecular ilustrativa do agente. Memorize-o e compare cada reencontro: mesmo agente no selo, diferente na comporta."
     }
   ]
 };

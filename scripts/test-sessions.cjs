@@ -41,6 +41,7 @@ function game(){let room=engine.empty(),now=1000;return {get room(){return room;
   const item=config.stages[stage],activity=item.seconds||(item.id==='targets'?config.targetSeconds:0);
   const target=g.room.startAt+activity*1000+(item.id==='race'?5000:1000);
   while(g.now<target){g.advance(Math.min(4000,target-g.now));g.act('a','read');g.act('b','read');}
+  if(item.id!=='factory')for(const id of ['a','b'])g.act(id,'quiz',{marks:[],mission:{}});
   for(const id of ['a','b'])g.act(id,'submit',{answer:item.correct,selectedAt:10,raceMs:4000,marks:[],mission:{}});
   assert.equal(g.room.phase,'results');assert.ok(g.room.players.every(p=>p.results.length===stage+1));
   if(stage<config.stages.length-1)g.act('a','next');

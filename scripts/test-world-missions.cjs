@@ -36,3 +36,15 @@ function reef(delay){let r=engine.empty(),now=1000;const act=(action,v={})=>{r=e
  act('submit',{answer:config.stages[2].correct,marks:[]});assert.equal(r.phase,'results');assert.ok(at<r.startAt+config.targetSeconds*1000);return r.players[0].results[0].quiz;}
 assert.ok(reef(1)>reef(12),'Respostas corretas mais rápidas devem valer mais.');
 console.log('Interações por proximidade, transporte e encaixe no mapa, mecanismos, memória, pergunta antecipada e bônus por rapidez verificados.');
+
+{
+ let r=engine.empty(),now=1000;const act=(id,action,v={})=>{r=engine.apply(r,id,{action,room:r.id,stage:r.stage,present:true,...v},now).room;};
+ act('a','join',{name:'A'});act('b','join',{name:'B'});r.stage=2;act('a','start');
+ while(now<r.startAt+1000){now+=Math.min(4000,r.startAt+1000-now);act('a','read');act('b','read');}
+ const marks=[...require('../js/targets.js').makeTargetPuzzle(r.id).infected];
+ act('a','quiz',{marks});assert.equal(r.questionAt,null);assert.throws(()=>act('a','submit',{answer:'C'}),{status:409});
+ now+=2000;act('b','quiz',{marks});assert.equal(r.questionAt,now);assert.equal(engine.snapshot(r,'a').practicalReady,2);
+ act('a','submit',{answer:'C'});now+=2000;act('b','submit',{answer:'C'});
+ assert.equal(r.phase,'results');assert.ok(r.players[0].results[0].quiz>r.players[1].results[0].quiz);assert.ok(r.players[0].results[0].practical>r.players[1].results[0].practical);
+ console.log('Pergunta liberada assim que todos terminam, prazo compartilhado e bônus individual da prática verificados.');
+}

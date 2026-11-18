@@ -1,7 +1,7 @@
 'use strict';
 
 function makeTargetPuzzle(roomId) {
-  const symbols = ['losango cheio','losango vazado','triângulo cheio','triângulo vazado','seta cheia','seta vazada','círculo cheio','círculo vazado','cruz','xis'];
+  const symbols = ['fragmento viral roxo','fragmento viral azul','fragmento viral verde'];
   let seed = 2166136261;
   for (const letter of roomId) seed = Math.imul(seed ^ letter.charCodeAt(0), 16777619);
   function random(max) {
@@ -9,7 +9,7 @@ function makeTargetPuzzle(roomId) {
     return Math.floor(seed / 4294967296 * max);
   }
   const marker = symbols[random(symbols.length)];
-  const distractors = symbols.filter(symbol => symbol !== marker);
+  const distractors = ['proteína própria','membrana saudável','oxigênio'];
   const cells = Array.from({length: 20}, (_, i) => i < 7 ? marker : distractors[random(distractors.length)]);
   for (let i = cells.length - 1; i > 0; i--) {
     const j = random(i + 1);

@@ -34,9 +34,19 @@ function launch(room, now) {
   room.phase = 'playing';
   room.submissions = {};
   room.quizStarts = {};
+  room.questionAt = null;
   delete room.positions;
   room.startAt = now + config.introSeconds * 1000;
   room.closeAt = room.startAt + secondsFor[room.stage] * 1000 + 6000;
+}
+
+function startQuestions(room,now) {
+  if(room.phase!=='playing'||room.questionAt||now<room.startAt)return false;
+  const stage=config.stages[room.stage];if(stage.id==='factory')return false;
+  const duration=stage.seconds||(stage.id==='race'?config.raceSeconds:config.targetSeconds);
+  const ready=room.players.filter(online).every(p=>room.quizStarts?.[p.id]);
+  if(!ready&&now<room.startAt+duration*1000)return false;
+  room.questionAt=now;room.closeAt=now+config.quizSeconds*1000+6000;return true;
 }
 
 function settle(room, now) {
@@ -89,8 +99,9 @@ function submit(room, id, body, now) {
     throw fail(409, 'Aguarde o fim da atividade prática para responder.');
   }
   const answer = ['A','B','C','D','E'].includes(body.answer) ? body.answer : null;
-  const quizAt=record?.at??room.startAt+activitySeconds*1000;
-  const withinQuiz = !activitySeconds&&!record || now < quizAt+config.quizSeconds*1000;
+  if(stage.id!=='factory'&&!room.questionAt)throw fail(409,'Aguarde a turma concluir a atividade.');
+  const quizAt=room.questionAt??record?.at??room.startAt+activitySeconds*1000;
+  const withinQuiz = stage.id==='factory' || now < quizAt+config.quizSeconds*1000;
   const correct = withinQuiz && answer === stage.correct;
   const result = { answer:withinQuiz ? answer : null, raceMs: null, place: null, practical: 0, quiz: correct ? Math.round(config.quizPoints*(.35+.65*Math.max(0,Math.min(1,1-(now-quizAt)/(config.quizSeconds*1000))))) : 0 };
   if (stage.id === 'factory') {
@@ -134,9 +145,11 @@ function apply(room, id, body, now) {
   if(body.action==='leave') {
     if(body.room===room.id && member){member.online=false;changed=true;}
     const after=maintainPresence(room,now);room=after.room;changed=after.changed||changed;
+    changed=startQuestions(room,now)||changed;
     changed=settle(room,now)||changed;
     return {room,changed};
   }
+  changed=startQuestions(room,now)||changed;
   changed=settle(room,now)||changed;
   if (body.action === 'read') return { room, changed };
   if (body.room !== room.id) throw fail(409, 'A sala mudou. Aguarde a atualização.');
@@ -159,6 +172,7 @@ function apply(room, id, body, now) {
       changed = true;
     }
   }
+  changed=startQuestions(room,now)||changed;
   changed = settle(room, now) || changed;
   return { room, changed };
 }
@@ -168,6 +182,7 @@ function snapshot(room, id) {
     id: room.id, phase: room.phase, stage: room.stage, startAt: room.startAt, closeAt: room.closeAt,
     host: room.host === id, joined: room.players.some(p => p.id === id && online(p)),
     submitted: !!room.submissions[id], received: room.players.filter(p=>online(p)&&room.submissions[p.id]).length,
+    questionAt:room.questionAt??null, practicalReady:room.players.filter(p=>online(p)&&room.quizStarts?.[p.id]).length,
     now: Date.now(),
     players: room.players.map((p,index)=>online(p)?{key:index,name:p.name,me:p.id===id,results:p.results,connection:p.connection}:null).filter(Boolean)
   };

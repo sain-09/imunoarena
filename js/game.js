@@ -96,6 +96,18 @@ function symbolTexture(symbol, color) {
     g.lineWidth = 8; g.lineCap = 'round'; g.lineJoin = 'round';
     const path = points => points.forEach(([x,y],i) => i ? g.lineTo(x,y) : g.moveTo(x,y));
     g.beginPath();
+    if(symbol.startsWith('fragmento viral')) {
+      const color=symbol.includes('azul')?'#48bce8':symbol.includes('verde')?'#59d89e':'#bc7ce5';
+      g.strokeStyle=color;g.fillStyle=color;
+      for(let i=0;i<8;i++){const a=i*Math.PI/4;g.beginPath();g.moveTo(64+Math.cos(a)*24,64+Math.sin(a)*24);g.lineTo(64+Math.cos(a)*40,64+Math.sin(a)*40);g.stroke();g.beginPath();g.arc(64+Math.cos(a)*40,64+Math.sin(a)*40,6,0,Math.PI*2);g.fill();}
+      g.beginPath();g.arc(64,64,28,0,Math.PI*2);g.fill();g.fillStyle='#fff6e4';g.beginPath();g.arc(56,56,7,0,Math.PI*2);g.fill();return;
+    }
+    if(['proteína própria','membrana saudável','oxigênio'].includes(symbol)) {
+      if(symbol==='oxigênio'){g.beginPath();g.arc(50,64,18,0,Math.PI*2);g.arc(82,64,18,0,Math.PI*2);g.fill();}
+      else if(symbol==='membrana saudável'){g.beginPath();g.ellipse(64,64,36,28,0,0,Math.PI*2);g.stroke();g.beginPath();g.arc(64,64,10,0,Math.PI*2);g.fill();}
+      else{for(const [x,y] of [[43,65],[64,45],[85,65],[64,85]]){g.beginPath();g.arc(x,y,11,0,Math.PI*2);g.fill();}}
+      return;
+    }
     if (symbol === 'correto') path([[33,65],[54,86],[94,42]]);
     else if (symbol === 'cruz') { path([[64,38],[64,90]]); path([[38,64],[90,64]]); }
     else if (symbol === 'xis') { path([[43,43],[85,85]]); path([[85,43],[43,85]]); }
@@ -456,7 +468,7 @@ function updatePeers(dt) {
     if (now - peer.receivedAt > peerLifetimeMs) livePeers.delete(key);
   }
   const inPlay = activeRound && room?.phase === 'playing' && activeRound === roundKey(room) &&
-    (['playing','quiz','mission'].includes(state.phase));
+    (['playing','quiz','mission','practical-wait'].includes(state.phase));
   const peers = inPlay ? livePeers.values() : [];
   const active = new Set();
   for (const peer of peers) {
@@ -569,7 +581,8 @@ function showIntro() {
   $('intro').dataset.theme = stage.id;
   $('introKicker').textContent = 'Prova ' + (room.stage + 1) + ' de ' + CONFIG.stages.length;
   $('introTitle').textContent = stage.title;
-  $('introGoal').textContent = stage.goal;
+  $('introContext').textContent = stage.context||'';
+  $('introGoal').textContent = 'Como jogar: '+stage.goal;
   updateIntro();
   $('intro').classList.remove('hidden');
 }
@@ -652,6 +665,9 @@ function handleRoom(updated) {
     showStandings(currentStage());
     return;
   }
+
+  if(room.questionAt&&!room.submitted&&activeRound===roundKey(room)&&['playing','mission','practical-wait'].includes(state.phase))showQuiz(true,true);
+  if(state.phase==='practical-wait'&&!room.submitted){$('status').textContent='Objetivos concluídos: '+room.practicalReady+'/'+room.players.length+'. A pergunta abre assim que todos terminarem, ou ao fim do prazo.';return;}
 
   if (!room.joined || room.submitted || classroom.now() >= room.closeAt) {
     waitForScores();
@@ -796,19 +812,19 @@ function showTargets() {
   const puzzle = makeTargetPuzzle(room.id);
   state.targetLimit = puzzle.infected.size;
   nearestCell = null;
-  $('qtext').textContent = 'Encontre as ' + state.targetLimit + ' células infectadas';
+  $('qtext').textContent = 'Reconhecimento T citotóxico: '+state.targetLimit+' células infectadas';
   const icon = symbolTexture(puzzle.marker,'#24464e');
   $('fragmentIcon').src = icon.image.toDataURL();
   icon.dispose();
-  $('fragmentName').textContent = puzzle.marker;
+  $('fragmentName').textContent = 'Amostra: '+puzzle.marker+' (ícone ilustrativo)';
   $('fragmentPanel').classList.remove('hidden');
-  $('status').textContent = 'Marque as células. Ao completar as marcações, a pergunta será aberta.';
+  $('status').textContent = 'Procure células que exibem o fragmento viral da amostra. Preserve as saudáveis. Complete as 7 marcações. Quando todos concluírem, a pergunta abre.';
   puzzle.cells.forEach((symbol,index) => {
     const [x,z] = CELL_PODS[index];
     const map = symbolTexture(symbol,'#24464e');
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent:true, depthTest:false }));
-    sprite.position.set(x,.49,z+1.10);
-    sprite.scale.set(.65,.65,1);
+    sprite.position.set(x,2.7,z);
+    sprite.scale.set(1.25,1.25,1);
     sprite.visible = false;
     scene.add(sprite);
     markers.push({sprite,x,z,index,symbol,reveal:0,pulse:0});
@@ -826,7 +842,7 @@ function scanCells() {
     marker.sprite.material.color.setHex(state.marks.has(marker.index) ? 0xffc66d : 0xffffff);
     if(distance < nearestDistance) { nearestDistance = distance; nearestCell = marker; }
   }
-  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + '/' + state.targetLimit + ' marcadas' + (state.marks.size === state.targetLimit ? ' · Inspeção concluída.' : ' · Busque o fragmento indicado.');
+  $('status').textContent=reefSector(player.z)+' · '+state.marks.size+'/'+state.targetLimit+' marcadas · '+(nearestCell?'Nesta célula: '+nearestCell.symbol+'. Marque somente o fragmento viral da amostra.':'Aproxime-se das células para reconhecer os sinais.');
   const button = $('scanCell');
   const selected = nearestCell && state.marks.has(nearestCell.index);
   button.disabled = !nearestCell || (!selected && state.marks.size >= state.targetLimit);
@@ -844,11 +860,19 @@ function toggleCell() {
   scanCells();
   if(state.marks.size===state.targetLimit)showQuiz(true);
 }
-function showQuiz(early=false) {
+function showQuiz(early=false,released=false) {
   const activitySeconds=currentStage().seconds || (activeMap==='targets'?CONFIG.targetSeconds:0);
-  if(!early && activitySeconds && classroom.now()<room.startAt+activitySeconds*1000)return;
-  if(missionPanel){missionPayload=missionPanel.finish();}
-  classroom.beginQuiz({marks:[...state.marks],mission:missionPayload});
+  if(!released && !early && activitySeconds && classroom.now()<room.startAt+activitySeconds*1000)return;
+  if(state.phase!=='practical-wait'){
+    if(missionPanel)missionPayload=missionPanel.finish();
+    classroom.beginQuiz({marks:[...state.marks],mission:missionPayload});
+  }
+  if(!released){
+    clearMarkers();resetInput();setPhase('practical-wait');
+    $('qtext').textContent='Objetivo registrado';$('time').textContent='—';
+    $('status').textContent='Aguardando a turma concluir o mapa. A pergunta abre para todos assim que o último terminar.';
+    return;
+  }
   clearMarkers();
   resetInput();
   setPhase('quiz');
@@ -876,6 +900,7 @@ function showQuiz(early=false) {
     choices.append(button);
   });
   setClock(CONFIG.quizSeconds);
+  if(room.questionAt)state.deadline=performance.now()+room.questionAt+CONFIG.quizSeconds*1000-classroom.now();
   updateClock(performance.now());
 }
 
@@ -1039,6 +1064,10 @@ function updateCamera(dt) {
   if (state.phase === 'menu') {
     camGoalPos.set(0, 3.8, player.z + 8.5);
     camGoalLook.set(0, 1.9, player.z);
+  } else if (['mission','practical-wait'].includes(state.phase)) {
+    const landscape=camera.aspect>1.25;
+    camGoalPos.set(player.x,landscape?9:8,player.z+(landscape?10:9));
+    camGoalLook.set(player.x,1.1,player.z-1.6);
   } else if (ARENAS[activeMap].camera) {
     camGoalPos.set(...ARENAS[activeMap].camera);
     camGoalLook.set(...ARENAS[activeMap].look);
@@ -1144,10 +1173,10 @@ function animateArenaEffects(dt, time) {
     marker.reveal += ((marker.sprite.visible ? 1 : 0)-marker.reveal)*(1-Math.exp(-16*dt));
     marker.pulse = Math.max(0,marker.pulse-dt*3.1);
     const pulse = Math.sin(Math.PI*marker.pulse);
-    const scale = motion ?  .65*(.69+.31*marker.reveal+.25*pulse) : .65;
+    const scale = motion ?  1.25*(.8+.2*marker.reveal+.18*pulse) : 1.25;
     marker.sprite.material.opacity = motion ? marker.reveal : 1;
     marker.sprite.scale.set(scale,scale,1);
-    marker.sprite.position.y = .49+(motion ? pulse*.15 : 0);
+    marker.sprite.position.y = 2.7+(motion ? pulse*.15 : 0);
   }
 }
 
@@ -1224,7 +1253,7 @@ function frame() {
    Resize
    ===================================================================== */
 function onResize() {
-  const w = window.innerWidth, h = window.innerHeight;
+  const w = Math.round(window.visualViewport?.width||window.innerWidth), h = Math.round(window.visualViewport?.height||window.innerHeight);
   renderer.setSize(w, h);
   const aspect = w / h;
   camera.aspect = aspect;
@@ -1236,6 +1265,7 @@ function onResize() {
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', onResize);
+window.visualViewport?.addEventListener('resize',onResize);
 window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
 
 /* =====================================================================
@@ -1305,7 +1335,7 @@ $('leaveRoom').addEventListener('click',()=>classroom.leave());
 $('scanCell').addEventListener('click', toggleCell);
 window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) { if(state.phase==='mission')missionPanel?.interact();else toggleCell(); } });
 classroom.setPositionSource(() => {
-  if (!activeRound || !['playing','quiz','mission'].includes(state.phase)) return null;
+  if (!activeRound || !['playing','quiz','mission','practical-wait'].includes(state.phase)) return null;
   return { round:activeRound, x:player.x, z:player.z, facing:player.facing, char:state.charId };
 });
 requestAnimationFrame(frame);

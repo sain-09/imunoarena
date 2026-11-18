@@ -10,8 +10,8 @@ function createWorldMission({scene,player,getModel,button,minus,plus,status,stag
     const group=new THREE.Group();group.position.set(x,0,z);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.75,.055,6,24),new THREE.MeshBasicMaterial({color:0xffd36b}));ring.rotation.x=Math.PI/2;ring.position.y=.14;group.add(ring);
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;
-    const texture=new THREE.CanvasTexture(canvas),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.position.y=2.5;sprite.scale.set(4.4,1.4,1);group.add(sprite);scene.add(group);objects.push(group);
-    const p={x,z,originZ:z,label,kind,index,group,canvas,texture,ring};points.push(p);paint(p,label);return p;
+    const texture=new THREE.CanvasTexture(canvas),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.position.y=2.5;sprite.scale.set(4.8,1.5,1);group.add(sprite);scene.add(group);objects.push(group);
+    const p={x,z,originZ:z,label,kind,index,group,canvas,texture,ring,sprite};points.push(p);paint(p,label);return p;
   }
   function paint(p,text){const g=p.canvas.getContext('2d');g.clearRect(0,0,512,160);g.fillStyle='#263957';g.beginPath();g.roundRect(4,4,504,152,22);g.fill();g.fillStyle='#fff0cd';g.font='bold 27px Trebuchet MS';g.textAlign='center';String(text).split('\n').flatMap(line=>line.match(/.{1,30}(?:\s|$)|.{1,30}/g)||[line]).slice(0,3).forEach((line,i)=>g.fillText(line.trim(),256,38+i*38,480));p.texture.needsUpdate=true;}
   function label(text){status.textContent=text;}
@@ -78,7 +78,7 @@ function createWorldMission({scene,player,getModel,button,minus,plus,status,stag
       if(p.kind==='card'){
         p.group.visible=carrying!==p.index&&!payload.order.includes(p.index);if(!p.group.visible)continue;
       }
-      const d=Math.hypot(player.x-p.x,player.z-p.z);if(d<distance){distance=d;nearest=p;}
+      const d=Math.hypot(player.x-p.x,player.z-p.z);p.sprite.visible=d<6.5;if(d<distance){distance=d;nearest=p;}
       p.ring.material.color.setHex(p.kind==='vaccine'&&payload.links.includes(p.index)?0x59ddae:d<2.4?0x69ffd0:0xffd36b);
     }
     minus.classList.toggle('hidden',nearest?.kind!=='control');plus.classList.toggle('hidden',nearest?.kind!=='control');
@@ -97,6 +97,8 @@ function createWorldMission({scene,player,getModel,button,minus,plus,status,stag
       label('Caminhe até os três mecanismos. Ajuste com −/+ e fixe cada resultado. '+payload.confirmed.length+'/3 confirmados.');
       points.forEach(p=>paint(p,p.label+'\nReferência: '+mission.reference[p.index]+' | Seu: '+payload.values[p.index]));
     }
+    if(nearest&&['card','vaccine','same'].includes(nearest.kind))label(status.textContent+' Próximo: '+nearest.label.replace(/\n/g,' — '));
+    if(nearest?.kind==='control')label(nearest.label+': referência '+mission.reference[nearest.index]+', seu ajuste '+payload.values[nearest.index]+'. Use Diminuir/Aumentar e depois Fixar este ajuste.');
     if(stage.id==='memory'){
       const signature=time<5?mission.signature:mission.encounters[Math.max(0,Math.min(5,encounter))];
       if(signature!==shownSignature){

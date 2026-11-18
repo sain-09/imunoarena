@@ -91,7 +91,7 @@
     border-radius: 50%; background: #ff9f1a; border: 3px solid #1d2b53; box-shadow: 0 3px 0 #1d2b53;
   }
   body.touch #joy { display: block; }
-  body:not([data-phase="playing"]) #joy { display: none !important; }
+  body:not([data-phase="playing"]):not([data-phase="mission"]) #joy { display: none !important; }
 
   #playerNames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0 12px; }
   #playerNames input, #playerCount { width: 100%; padding: 7px; border: 1px solid #8c9eb7; border-radius: 7px; font: inherit; }
@@ -342,3 +342,24 @@ body[data-phase="mission"] #qpanel {display:block;}
 #worldActions {position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);z-index:8;display:flex;gap:8px;max-width:58vw;flex-wrap:wrap;justify-content:flex-end;}
 #worldActions button {min-height:50px;padding:10px 15px;border:3px solid #3d2b47;border-radius:15px;background:#ffdb88;color:#3d2b47;font:inherit;font-weight:800;box-shadow:0 3px #3d2b47;}
 #worldActions button:disabled {opacity:.55;}
+
+/* Área inferior reservada para o selo da hospedagem e barras do navegador. */
+:root { --action-bottom:calc(max(12px,env(safe-area-inset-bottom)) + 88px); }
+#fieldActions,#worldActions {bottom:var(--action-bottom);right:max(16px,env(safe-area-inset-right));}
+#leaveRoom,body[data-phase="playing"][data-arena="targets"] #leaveRoom {top:max(8px,env(safe-area-inset-top));bottom:auto;left:max(10px,env(safe-area-inset-left));right:auto;min-height:44px;}
+body[data-phase="playing"] #joy,body[data-phase="mission"] #joy {display:block!important;z-index:12;touch-action:none;}
+@media(orientation:portrait){ #topwrap {top:calc(max(8px,env(safe-area-inset-top)) + 50px);} #worldActions {max-width:55vw;} }
+@media(orientation:landscape) and (max-height:600px){
+ #topwrap {top:max(5px,env(safe-area-inset-top));width:min(58vw,560px);}
+ #qtext {font-size:15px;} #status {font-size:12px;line-height:1.25;}
+ #joy {left:max(16px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));width:112px;height:112px;}
+ #worldActions {max-width:37vw;gap:5px;} #worldActions button {font-size:13px;padding:8px 10px;min-height:44px;}
+ #challenge {top:50%;width:min(76vw,760px);max-height:90dvh;} #challengeChoices.quizChoices {grid-template-columns:repeat(2,minmax(0,1fr));}
+ #intro {padding:8px max(16px,env(safe-area-inset-right));} .intro-card {max-height:94dvh;overflow:auto;}
+}
+
+#introContext {font-size:clamp(14px,2.3vw,18px);line-height:1.45;color:#e4fff5;}
+#introGoal {padding-top:10px;border-top:1px solid #ffffff45;}
+
+#result {bottom:var(--action-bottom);max-height:calc(100dvh - 128px);}
+@media(orientation:landscape) and (max-height:600px){#challenge {top:calc(50% - 34px);max-height:calc(100dvh - 116px);}}

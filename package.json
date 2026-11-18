@@ -2,6 +2,6 @@
   "name": "imunoarena",
   "version": "1.0.0",
   "private": true,
-  "scripts": { "build": "node scripts/build.cjs", "test": "node scripts/test-realtime.cjs && node scripts/test-network.cjs && node scripts/test-assets.cjs && node scripts/test-sessions.cjs && node scripts/test-world-missions.cjs" },
+  "scripts": { "build": "node scripts/build.cjs", "test": "node scripts/test-realtime.cjs && node scripts/test-network.cjs && node scripts/test-assets.cjs && node scripts/test-sessions.cjs && node scripts/test-world-missions.cjs && node scripts/test-education.cjs" },
   "dependencies": { "@netlify/blobs": "^10.0.0" }
 }

@@ -225,6 +225,7 @@ const state = {
 };
 const player = { group: null, x: START_POS.x, z: START_POS.z, facing: 0, faceTarget: Math.PI };
 const characterModels = createCharacterModels(THREE, CONFIG.models);
+const podium = createPodium(characterModels);
 
 function setCharacter(id) {
   state.charId = id;
@@ -540,6 +541,7 @@ function currentStage() { return CONFIG.stages[state.stageIndex]; }
 let missionPanel=null;
 let missionPayload=null;
 function setPhase(phase) {
+  if(phase !== 'result')podium.hide();
   if(phase !== 'mission') { $('missionPanel').classList.add('hidden'); $('worldActions').classList.add('hidden'); }
   state.phase = phase;
   document.body.dataset.phase = phase;
@@ -952,7 +954,9 @@ function showStandings(stage) {
   }
   const board = $('standings');
   board.replaceChildren();
-  const ordered = [...room.players].sort((a, b) => total(b) - total(a));
+  const ordered = [...room.players].sort((a, b) => total(b) - total(a) || (a.key??0)-(b.key??0));
+  $('result').classList.toggle('final-result',final);
+  if(final)podium.show(ordered.slice(0,3).map(p=>({...p,points:total(p)})));else podium.hide();
   for (const competitor of ordered) {
     const entry = competitor.results[state.stageIndex];
     const line = document.createElement('p');

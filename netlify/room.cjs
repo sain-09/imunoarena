@@ -61,12 +61,12 @@ function settle(room, now) {
   return true;
 }
 
-function register(room, id, name, now) {
+function register(room, id, name, now, char='male') {
   if (room.players.some(p => p.id === id && online(p)) || room.phase !== 'lobby') return false;
   if (typeof name !== 'string' || !name.trim()) throw fail(400, 'Digite seu nome.');
   if (room.players.filter(online).length >= 40) throw fail(409, 'A sala atingiu o limite de 40 jogadores.');
   room.host ||= id;
-  const player={id,name:name.trim().slice(0,24),results:[],online:true,lastSeen:now,connection:randomUUID()};
+  const player={id,char:char==='female'?'female':'male',name:name.trim().slice(0,24),results:[],online:true,lastSeen:now,connection:randomUUID()};
   const available=room.players.findIndex(p=>!online(p));
   if(available<0)room.players.push(player);
   else room.players[available]=player;
@@ -154,7 +154,7 @@ function apply(room, id, body, now) {
   if (body.action === 'read') return { room, changed };
   if (body.room !== room.id) throw fail(409, 'A sala mudou. Aguarde a atualização.');
   if(body.action==='quiz')changed=beginQuiz(room,id,body,now)||changed;
-  else if (body.action === 'join') changed = register(room, id, body.name, now) || changed;
+  else if (body.action === 'join') changed = register(room, id, body.name, now, body.char) || changed;
   else if (body.action === 'submit') changed = submit(room, id, body, now) || changed;
   else {
     if (id !== room.host) throw fail(403, 'Apenas quem abriu a sala controla as provas.');
@@ -168,7 +168,7 @@ function apply(room, id, body, now) {
     } else if (body.action === 'reset' && room.phase === 'results') {
       const present=room.players.filter(online);
       room = empty();
-      for(const player of present.sort((a,b)=>Number(b.id===id)-Number(a.id===id)))register(room,player.id,player.name,now);
+      for(const player of present.sort((a,b)=>Number(b.id===id)-Number(a.id===id)))register(room,player.id,player.name,now,player.char);
       changed = true;
     }
   }
@@ -184,7 +184,7 @@ function snapshot(room, id) {
     submitted: !!room.submissions[id], received: room.players.filter(p=>online(p)&&room.submissions[p.id]).length,
     questionAt:room.questionAt??null, practicalReady:room.players.filter(p=>online(p)&&room.quizStarts?.[p.id]).length,
     now: Date.now(),
-    players: room.players.map((p,index)=>online(p)?{key:index,name:p.name,me:p.id===id,results:p.results,connection:p.connection}:null).filter(Boolean)
+    players: room.players.map((p,index)=>online(p)?{key:index,name:p.name,char:p.char||'male',me:p.id===id,results:p.results,connection:p.connection}:null).filter(Boolean)
   };
 }
 

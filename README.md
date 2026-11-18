@@ -98,3 +98,7 @@ A fase 6 sinaliza apenas o próximo destino; destinos incorretos não consomem u
 ### Tela inicial temática
 
 Menu com ilustração vetorial própria de hemácia, leucócito e anticorpo, seleção visual dos personagens, campo de nome e participantes em etiquetas. Layout adaptado para desktop, celular em retrato e paisagem, com rolagem independente do formulário em telas baixas. Animações respeitam a preferência por movimento reduzido. Testado automaticamente no Edge/WebGL em 1280×800, 390×844 e 844×390; aparelhos físicos ainda precisam de validação.
+
+### Música e premiação
+
+Trilha instrumental original gerada por Web Audio após o primeiro toque, com volume e opção de desligar salvos no navegador. Pausa ao ocultar a aba. Ao concluir as oito provas, o resultado mostra até três personagens dos participantes no pódio: campeão pulando com troféu e demais colocados dançando. O servidor preserva o personagem selecionado na entrada e no reinício. A cena libera seus recursos ao sair do resultado e reutiliza os modelos existentes.

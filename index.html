@@ -83,6 +83,7 @@
 <section id="result" class="card hidden" aria-labelledby="resTitle">
   <h2 id="resTitle"></h2>
   <p id="resSummary"></p>
+  <section id="podium" class="hidden" aria-label="Pódio dos três melhores"><canvas id="podiumCanvas" aria-label="Personagens comemorando no pódio"></canvas><div id="podiumNames"></div></section>
   <div id="standings"></div>
   <div id="resBtns">
     <button class="bigBtn" id="againBtn">Iniciar prova</button>
@@ -111,6 +112,9 @@
 <script src="js/targets.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/world-missions.js"></script>
+<aside id="musicControls" aria-label="Música de fundo"><button id="musicToggle" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l11-2v12M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg><span>Música ligada</span></button><input id="musicVolume" type="range" min="0" max="0.5" step="0.01" aria-label="Volume da música"></aside>
+<script src="js/music.js"></script>
+<script src="js/podium.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

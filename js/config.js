@@ -1,46 +1,75 @@
 const IMUNO_CONFIG = {
-  introSeconds: 5,
-  roundSeconds: 27,
-  minPoints: 100,
-  maxPoints: 1000,
-  moveSpeed: 7,
-  raceSeconds: 65,
-  quizSeconds: 15,
-  targetSeconds: 44,
-  practicalPoints: 700,
-  quizPoints: 300,
-  racePlaces: [700, 500, 300, 100],
-  models: { male: 'models/enfermeiro.glb', female: 'models/enfermeira.glb' },
-  stages: [
+  "introSeconds": 18,
+  "roundSeconds": 45,
+  "minPoints": 100,
+  "maxPoints": 1000,
+  "moveSpeed": 7,
+  "raceSeconds": 100,
+  "quizSeconds": 30,
+  "targetSeconds": 90,
+  "practicalPoints": 700,
+  "quizPoints": 300,
+  "racePlaces": [
+    700,
+    500,
+    300,
+    100
+  ],
+  "models": {
+    "male": "models/enfermeiro.glb",
+    "female": "models/enfermeira.glb"
+  },
+  "stages": [
     {
-      id: 'factory', title: 'Fábrica de anticorpos',
-      goal: 'Atravesse o linfonodo, contorne as bancadas e fique na estação da resposta até o sinal.',
-      text: 'Durante uma infecção, o organismo identifica um agente estranho. Qual célula produz anticorpos?',
-      options: ['Hemácias', 'Linfócitos B (plasmócitos)', 'Plaquetas', 'Neutrófilos', 'Linfócitos T citotóxicos'],
-      correct: 'B',
-      explanation: 'Plasmócitos são células derivadas de linfócitos B que secretam anticorpos.'
+      "id": "factory",
+      "title": "Fábrica de anticorpos",
+      "goal": "Atravesse o linfonodo, contorne as bancadas e fique na estação da resposta até o sinal.",
+      "text": "Durante uma infecção, o organismo identifica um agente estranho. Qual célula produz anticorpos?",
+      "options": [
+        "Hemácias",
+        "Linfócitos B (plasmócitos)",
+        "Plaquetas",
+        "Neutrófilos",
+        "Linfócitos T citotóxicos"
+      ],
+      "correct": "B",
+      "explanation": "Plasmócitos são células derivadas de linfócitos B que secretam anticorpos."
     },
     {
-      id: 'race', title: 'Corrida da hemácia',
-      goal: 'Leve O₂ dos pulmões ao músculo. Escolha a abertura certa nas fileiras e atravesse os bloqueios móveis.',
-      text: 'Qual é a função dos glóbulos vermelhos?',
-      options: ['Produzir anticorpos', 'Destruir bactérias', 'Transportar oxigênio por meio da hemoglobina', 'Realizar a coagulação', 'Produzir células de defesa'],
-      correct: 'C',
-      explanation: 'A hemoglobina das hemácias se liga ao oxigênio nos pulmões e o libera nos tecidos.'
+      "id": "race",
+      "title": "Corrida da hemácia",
+      "goal": "Leve O₂ dos pulmões ao músculo. Escolha a abertura certa nas fileiras e atravesse os bloqueios móveis.",
+      "text": "Qual é a função dos glóbulos vermelhos?",
+      "options": [
+        "Produzir anticorpos",
+        "Destruir bactérias",
+        "Transportar oxigênio por meio da hemoglobina",
+        "Realizar a coagulação",
+        "Produzir células de defesa"
+      ],
+      "correct": "C",
+      "explanation": "A hemoglobina das hemácias se liga ao oxigênio nos pulmões e o libera nos tecidos."
     },
     {
-      id: 'targets', title: 'Alvo infectado',
-      goal: 'Encontre as sete células com o fragmento indicado. Você pode trocar marcações até o tempo acabar. A pergunta abre ao fim da inspeção.',
-      text: 'Qual célula reconhece e destrói células infectadas por vírus?',
-      options: ['Hemácia', 'Plaqueta', 'Linfócito T citotóxico', 'Eosinófilo', 'Basófilo'],
-      correct: 'C',
-      explanation: 'Linfócitos T citotóxicos reconhecem fragmentos virais apresentados pelas células infectadas e induzem sua morte.'
+      "id": "targets",
+      "title": "Alvo infectado",
+      "goal": "Encontre as sete células com o fragmento indicado. Você pode trocar marcações até o tempo acabar. A pergunta abre ao fim da inspeção.",
+      "text": "Qual célula reconhece e destrói células infectadas por vírus?",
+      "options": [
+        "Hemácia",
+        "Plaqueta",
+        "Linfócito T citotóxico",
+        "Eosinófilo",
+        "Basófilo"
+      ],
+      "correct": "C",
+      "explanation": "Linfócitos T citotóxicos reconhecem fragmentos virais apresentados pelas células infectadas e induzem sua morte."
     },
     {
       "id": "patrol",
       "title": "Patrulha em alerta",
-      "seconds": 35,
-      "goal": "Distribua três leucócitos entre pele, pulmão e intestino. Observe as cinco ondas e reposicione a patrulha antes de cada ataque.",
+      "seconds": 120,
+      "goal": "Defenda os três tecidos. Use o joystick para alcançar os invasores e toque em Neutralizar antes que atinjam o tecido. São três grupos, nove invasores no total.",
       "text": "Uma pessoa apresenta baixa quantidade de leucócitos no sangue. Qual consequência pode ocorrer?",
       "options": [
         "Aumento do transporte de oxigênio.",
@@ -55,8 +84,8 @@ const IMUNO_CONFIG = {
     {
       "id": "barriers",
       "title": "Primeira linha",
-      "seconds": 32,
-      "goal": "Organize os acontecimentos de um corte na pele. Toque em dois cartões para trocar suas posições na sequência.",
+      "seconds": 120,
+      "goal": "Pegue um acontecimento com o botão Carregar, caminhe até um nicho numerado e coloque. Organize as quatro etapas no próprio mapa.",
       "text": "Sobre a imunidade inata e a imunidade adaptativa, assinale a alternativa correta.",
       "options": [
         "A imunidade inata possui memória imunológica específica.",
@@ -71,8 +100,8 @@ const IMUNO_CONFIG = {
     {
       "id": "vaccine",
       "title": "Escola da imunidade",
-      "seconds": 35,
-      "goal": "Monte o caminho da vacina até a memória. Escolha um destino para cada etapa do mapa de causa e efeito.",
+      "seconds": 120,
+      "goal": "Percorra as quatro estações na ordem dos efeitos da vacinação. Aproxime-se e transporte o sinal: antígeno, ativação, expansão e memória.",
       "text": "Qual é o objetivo principal da vacinação?",
       "options": [
         "Provocar a doença em sua forma mais grave.",
@@ -87,8 +116,8 @@ const IMUNO_CONFIG = {
     {
       "id": "inflammation",
       "title": "Vaso em alerta",
-      "seconds": 35,
-      "goal": "Reproduza a inflamação no simulador. Compare o tecido de referência e ajuste fluxo, permeabilidade e mediadores.",
+      "seconds": 120,
+      "goal": "Vá aos três mecanismos do vaso. Compare o valor de referência no local, ajuste com Diminuir/Aumentar e fixe cada ajuste.",
       "text": "Vermelhidão, calor, dor e inchaço durante a inflamação acontecem principalmente devido a quê?",
       "options": [
         "Diminuição do fluxo sanguíneo.",
@@ -103,8 +132,8 @@ const IMUNO_CONFIG = {
     {
       "id": "memory",
       "title": "O invasor voltou",
-      "seconds": 35,
-      "goal": "Observe a assinatura do primeiro invasor. Depois identifique os reencontros e rejeite os agentes diferentes em seis encontros.",
+      "seconds": 120,
+      "goal": "Memorize a assinatura inicial por cinco segundos. Em cada encontro, caminhe ao selo se for o mesmo agente, ou à comporta se for outro. Toque para registrar.",
       "text": "Por que a resposta costuma ser mais rápida e eficiente no segundo contato com o mesmo microrganismo?",
       "options": [
         "As hemácias armazenam informações sobre vírus.",

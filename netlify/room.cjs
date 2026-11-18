@@ -33,6 +33,7 @@ function maintainPresence(room, now) {
 function launch(room, now) {
   room.phase = 'playing';
   room.submissions = {};
+  room.quizStarts = {};
   delete room.positions;
   room.startAt = now + config.introSeconds * 1000;
   room.closeAt = room.startAt + secondsFor[room.stage] * 1000 + 6000;
@@ -62,18 +63,36 @@ function register(room, id, name, now) {
   return true;
 }
 
+function beginQuiz(room,id,body,now) {
+  if(room.phase!=='playing'||body.stage!==room.stage||now<room.startAt||now>=room.closeAt||!room.players.some(p=>p.id===id&&online(p)))return false;
+  room.quizStarts||={};if(room.quizStarts[id])return false;
+  const stage=config.stages[room.stage],duration=stage.seconds||(stage.id==='targets'?config.targetSeconds:0);
+  const m=body.mission||{},marks=Array.isArray(body.marks)?[...new Set(body.marks.filter(n=>Number.isInteger(n)&&n>=0&&n<20))]:[];
+  const complete=stage.id==='targets'?marks.length===makeTargetPuzzle(room.id).infected.size:
+    stage.id==='patrol'?new Set([...(Array.isArray(m.intercepts)?m.intercepts:[]),...(Array.isArray(m.escaped)?m.escaped:[])].filter(n=>Number.isInteger(n)&&n>=0&&n<9)).size===9:
+    stage.id==='barriers'?Array.isArray(m.order)&&new Set(m.order).size===4&&m.order.every(n=>Number.isInteger(n)&&n>=0&&n<4):
+    stage.id==='vaccine'?Array.isArray(m.links)&&new Set(m.links).size===4&&m.links.every(n=>Number.isInteger(n)&&n>=0&&n<4):
+    stage.id==='inflammation'?Array.isArray(m.confirmed)&&[0,1,2].every(n=>m.confirmed.includes(n)):
+    stage.id==='memory'?Array.isArray(m.answers)&&m.answers.length===6&&m.answers.every(n=>typeof n==='boolean'):false;
+  if(duration&&now<room.startAt+duration*1000&&!complete)throw fail(409,'Conclua os objetivos do mapa antes da pergunta.');
+  room.quizStarts[id]={at:now,marks,mission:m};return true;
+}
+
 function submit(room, id, body, now) {
   if (room.phase !== 'playing' || body.stage !== room.stage || now < room.startAt || now >= room.closeAt) return false;
   if (!room.players.some(p => p.id === id && online(p)) || room.submissions[id]) return false;
   const stage = config.stages[room.stage];
   const activitySeconds = stage.seconds || (stage.id==='targets'?config.targetSeconds:0);
-  if (activitySeconds && now < room.startAt + activitySeconds * 1000) {
+  const record=room.quizStarts?.[id];
+  if(record)body={...body,marks:record.marks,mission:record.mission};
+  if (!record && activitySeconds && now < room.startAt + activitySeconds * 1000) {
     throw fail(409, 'Aguarde o fim da atividade prática para responder.');
   }
   const answer = ['A','B','C','D','E'].includes(body.answer) ? body.answer : null;
-  const withinQuiz = !activitySeconds || now < room.startAt + (activitySeconds + config.quizSeconds) * 1000;
+  const quizAt=record?.at??room.startAt+activitySeconds*1000;
+  const withinQuiz = !activitySeconds&&!record || now < quizAt+config.quizSeconds*1000;
   const correct = withinQuiz && answer === stage.correct;
-  const result = { answer:withinQuiz ? answer : null, raceMs: null, place: null, practical: 0, quiz: correct ? config.quizPoints : 0 };
+  const result = { answer:withinQuiz ? answer : null, raceMs: null, place: null, practical: 0, quiz: correct ? Math.round(config.quizPoints*(.35+.65*Math.max(0,Math.min(1,1-(now-quizAt)/(config.quizSeconds*1000))))) : 0 };
   if (stage.id === 'factory') {
     const remaining = Number.isFinite(body.selectedAt) ? Math.min(config.roundSeconds, Math.max(0, body.selectedAt)) : 0;
     result.quiz = correct ? Math.round(config.minPoints + (config.maxPoints - config.minPoints) * remaining / config.roundSeconds) : 0;
@@ -94,6 +113,11 @@ function submit(room, id, body, now) {
     const mission=scoreMission(stage.id,room.id,body.mission,config.practicalPoints);
     result.practical=mission.points;
     result.missionDetail=mission.detail;
+  }
+  if(stage.id!=='factory'&&record){
+    const duration=stage.seconds||(stage.id==='targets'?config.targetSeconds:config.raceSeconds);
+    const remaining=Math.max(0,1-(record.at-room.startAt)/(duration*1000));
+    if(stage.id!=='race')result.practical=Math.round(result.practical*(.65+.35*remaining));
   }
   room.submissions[id] = result;
   return true;
@@ -116,7 +140,8 @@ function apply(room, id, body, now) {
   changed=settle(room,now)||changed;
   if (body.action === 'read') return { room, changed };
   if (body.room !== room.id) throw fail(409, 'A sala mudou. Aguarde a atualização.');
-  if (body.action === 'join') changed = register(room, id, body.name, now) || changed;
+  if(body.action==='quiz')changed=beginQuiz(room,id,body,now)||changed;
+  else if (body.action === 'join') changed = register(room, id, body.name, now) || changed;
   else if (body.action === 'submit') changed = submit(room, id, body, now) || changed;
   else {
     if (id !== room.host) throw fail(403, 'Apenas quem abriu a sala controla as provas.');

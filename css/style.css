@@ -337,3 +337,8 @@ body[data-phase="mission"] #qpanel { display:none; }
 #leaveRoom { position:fixed; z-index:20; right:max(12px,env(safe-area-inset-right)); bottom:max(12px,env(safe-area-inset-bottom)); min-height:44px; padding:8px 14px; color:#3d2b47; background:#fff1d7; border:2px solid #3d2b47; border-radius:14px; box-shadow:0 3px #3d2b47; font:inherit; font-weight:800; cursor:pointer; }
 #leaveRoom:active { transform:translateY(2px); box-shadow:0 1px #3d2b47; }
 body[data-phase="playing"][data-arena="targets"] #leaveRoom { bottom:calc(max(12px,env(safe-area-inset-bottom)) + 70px); }
+body[data-phase="mission"] #joy {display:block;}
+body[data-phase="mission"] #qpanel {display:block;}
+#worldActions {position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);z-index:8;display:flex;gap:8px;max-width:58vw;flex-wrap:wrap;justify-content:flex-end;}
+#worldActions button {min-height:50px;padding:10px 15px;border:3px solid #3d2b47;border-radius:15px;background:#ffdb88;color:#3d2b47;font:inherit;font-weight:800;box-shadow:0 3px #3d2b47;}
+#worldActions button:disabled {opacity:.55;}

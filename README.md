@@ -21,20 +21,21 @@ Na tela de resultado de qualquer fase, o anfitrião pode usar Novo campeonato do
 
 ## Provas
 
-Cada prova começa com uma largada sincronizada de cinco segundos, com o objetivo da missão. Na fábrica, a pergunta abre junto com a prova. Na corrida e no recife, a pergunta aparece depois da atividade. Em celulares, você pode jogar com a tela em pé ou deitada.
+Cada prova começa com uma explicação e largada sincronizada de 18 segundos, com o objetivo da missão. Na fábrica, a pergunta abre junto com a prova. Na corrida e no recife, a pergunta aparece depois da atividade. Em celulares, você pode jogar com a tela em pé ou deitada.
 
 1. **Fábrica de anticorpos.** Use o joystick para atravessar as bancadas do linfonodo até uma das cinco estações. Você pode trocar até o cronômetro zerar. A estação correta vale de 100 a 1.000 pontos conforme o tempo restante ao entrar nela.
-2. **Corrida da hemácia.** Leve oxigênio até o músculo contornando as fileiras de hemácias e cruzando os bloqueios móveis. As três primeiras colocações valem 700, 500 e 300. Os demais que concluírem ganham 100. Tempos iguais recebem a mesma colocação. A pergunta vale 300.
-3. **Alvo infectado.** Toque nas células com o fragmento indicado. Explore o recife com o joystick e use Marcar célula ao se aproximar de um alvo. A amostra de 20 células varia a cada campeonato e é igual para toda a turma. Você pode manter até sete marcações e desfazê-las para trocar. A pergunta abre automaticamente após os 44 segundos de inspeção, com 15 segundos para responder. Cada marcação incorreta anula um acerto. A prática vale até 700 e a pergunta vale 300.
+2. **Corrida da hemácia.** Leve oxigênio até o músculo contornando as fileiras de hemácias e cruzando os bloqueios móveis. As três primeiras colocações valem 700, 500 e 300. Os demais que concluírem ganham 100. Tempos iguais recebem a mesma colocação. A pergunta vale até 300, conforme a rapidez.
+3. **Alvo infectado.** Toque nas células com o fragmento indicado. Explore o recife com o joystick e use Marcar célula ao se aproximar de um alvo. A amostra de 20 células varia a cada campeonato e é igual para toda a turma. Você pode manter até sete marcações e desfazê-las para trocar. A pergunta abre ao completar as marcações ou ao terminar os 90 segundos de inspeção, com 30 segundos para responder. Cada marcação incorreta anula um acerto. A prática vale até 700 e a pergunta vale 300.
 
-4. **Patrulha em alerta.** Reparta três leucócitos entre pele, pulmão e intestino. Cinco ondas mostram ameaças diferentes. A distribuição é registrada ao fim de cada onda. A prática vale até 700 pela melhor contenção possível com os três patrulheiros.
-5. **Primeira linha.** Toque em dois cartões para trocar suas posições e ordenar os acontecimentos da entrada de um agente por um corte na pele.
-6. **Escola da imunidade.** Conecte cada etapa da vacinação ao seu efeito seguinte, chegando à formação de memória e à resposta no reencontro.
-7. **Vaso em alerta.** Ajuste fluxo sanguíneo, permeabilidade e mediadores em um painel de simulação para reproduzir o padrão de tecido inflamado mostrado como referência.
-8. **O invasor voltou.** Memorize a assinatura nos primeiros cinco segundos. Depois identifique, em seis encontros, se o agente é o mesmo ou é diferente.
+4. **Patrulha em alerta.** Caminhe até os invasores que avançam para pele, pulmão e intestino. Neutralize-os por proximidade antes de atingirem o tecido. São três grupos e nove invasores; os que escapam reduzem o aproveitamento da defesa.
+5. **Primeira linha.** Carregue as peças dos acontecimentos no mapa e leve-as aos quatro nichos numerados. Os modelos se deslocam com o personagem e ficam nas posições escolhidas. É possível pegar uma peça colocada usando o nicho quando estiver carregando outra peça.
+6. **Escola da imunidade.** Transporte o sinal luminoso pelas quatro estações na sequência dos efeitos da vacinação. O trajeto escolhido fica marcado no piso. A ordem das visitas determina o aproveitamento.
+7. **Vaso em alerta.** Vá fisicamente à roda de fluxo, à alavanca das junções e ao mostrador de mediadores. Cada mecanismo mostra sua referência; ajuste pelos botões contextuais e fixe o resultado no local.
+8. **O invasor voltou.** Observe a assinatura inicial por cinco segundos. Depois caminhe até o selo para registrar o mesmo agente ou até a comporta para registrar um agente diferente. São seis encontros, sem escolhas em card.
 
-As fases 4–8 têm cenários GLB próprios e controles por toque em painéis de atividade. A atividade termina automaticamente no prazo compartilhado e abre a pergunta por 15 segundos. Cada uma vale até 700 pela prática e mais 300 pela resposta, com total máximo de 8.000 no campeonato. Os sinais usados na simulação de inflamação são representações didáticas.
+As cinco atividades usam joystick, tecla E no computador e um botão de interação que só funciona perto do objeto. Não há painel central de alternativas para realizar a prática. O cenário permanece visível, com instruções curtas no HUD e identificação dos objetos no próprio mapa. As práticas novas duram até 120 segundos e abrem a pergunta ao terminar os objetivos ou o prazo. O bônus de rapidez da prática multiplica o aproveitamento por `0,65 + 0,35 × fração de tempo restante`: agir rápido com erros não garante a pontuação máxima.
 
+A explicação da fase dura 18 segundos. As perguntas finais duram 30 segundos; a fábrica tem 45 segundos, a corrida até 100 e o recife até 90. Na fase 3, completar as sete marcações abre imediatamente a pergunta, inclusive se houver marcações erradas, que continuam descontando pontos na inspeção. O servidor registra o início individual da pergunta e congela os dados da prática. Uma resposta correta final vale de 105 a 300 pontos conforme o tempo restante; errar vale zero. A fábrica mantém sua fórmula própria de 100 a 1.000 pontos e a corrida mantém a classificação por tempo de chegada. O máximo do campeonato continua sendo 8.000 pontos.
 
 O joystick aparece nas provas com movimentação. WASD e setas também funcionam. As perguntas, os tempos e os valores podem ser editados em js/config.js.
 

@@ -33,6 +33,7 @@ function scoreMission(id, roomId, payload, maxPoints = 700) {
   let fraction=0;
   let detail='';
   if(id==='patrol'){
+    if(Array.isArray(data.intercepts)){const hits=new Set(data.intercepts.filter(n=>Number.isInteger(n)&&n>=0&&n<9)).size;return {points:Math.round(hits/9*maxPoints),detail:hits+'/9 invasores neutralizados'};}
     let contained=0,total=0,possible=0;
     mission.waves.forEach((wave,i)=>{
       const allocation=Array.isArray(data.waves?.[i]) ? data.waves[i] : [];

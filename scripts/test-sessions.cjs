@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const engine=require('../netlify/room.cjs');
 function game(){let room=engine.empty(),now=1000;return {get room(){return room;},get now(){return now;},advance(ms){now+=ms;},act(id,action,values={}){room=engine.apply(room,id,{room:room.id,stage:room.stage,action,present:true,...values},now).room;return engine.snapshot(room,id);}};}
 {
- const g=game();g.act('a','join',{name:'Ana'});g.act('b','join',{name:'Bia'});g.act('a','start');g.advance(5000);g.act('a','submit',{answer:'B',selectedAt:10});
+ const g=game();g.act('a','join',{name:'Ana'});g.act('b','join',{name:'Bia'});g.act('a','start');while(g.now<g.room.startAt){g.advance(Math.min(4000,g.room.startAt-g.now));g.act('a','read');g.act('b','read');}g.act('a','submit',{answer:'B',selectedAt:10});
  assert.equal(g.room.phase,'playing');
  for(let i=0;i<3;i++){g.advance(5000);g.act('a','read');}
  assert.equal(g.room.phase,'results','A sala deve parar de esperar pelo jogador que sumiu.');

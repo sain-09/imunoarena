@@ -246,7 +246,7 @@ const KEYMAP = {
 window.addEventListener('keydown', e => {
   const k = KEYMAP[e.code];
   if (!k) return;
-  if (state.phase === 'playing') { keys.add(k); e.preventDefault(); }
+  if (['playing','mission'].includes(state.phase)) { keys.add(k); e.preventDefault(); }
 });
 window.addEventListener('keyup', e => {
   const k = KEYMAP[e.code];
@@ -275,7 +275,7 @@ function releaseJoy(event) {
   knobEl.style.transform = 'translate(0,0)';
 }
 joyEl.addEventListener('pointerdown', event => {
-  if (joy.pointer !== null || state.phase !== 'playing' || event.button !== 0) return;
+  if (joy.pointer !== null || !['playing','mission'].includes(state.phase) || event.button !== 0) return;
   event.preventDefault();
   joy.pointer = event.pointerId;
   try { joyEl.setPointerCapture(event.pointerId); } catch { releaseJoy(); return; }
@@ -528,7 +528,7 @@ function currentStage() { return CONFIG.stages[state.stageIndex]; }
 let missionPanel=null;
 let missionPayload=null;
 function setPhase(phase) {
-  if(phase !== 'mission') $('missionPanel').classList.add('hidden');
+  if(phase !== 'mission') { $('missionPanel').classList.add('hidden'); $('worldActions').classList.add('hidden'); }
   state.phase = phase;
   document.body.dataset.phase = phase;
   document.body.dataset.arena = activeMap;
@@ -741,10 +741,12 @@ function startMission() {
   const stage=currentStage();
   setPhase('mission');
   $('missionPanel').dataset.theme=stage.id;
-  $('missionPanel').classList.remove('hidden');
+  $('missionPanel').classList.add('hidden');
+  $('qtext').textContent=stage.title;
+  $('worldActions').classList.remove('hidden');
   setClock(stage.seconds);
   state.deadline=performance.now()+room.startAt+stage.seconds*1000-classroom.now();
-  missionPanel=createMissionPanel({
+  missionPanel=createWorldMission({scene,player,getModel:()=>arenaModels[activeMap],button:$('worldInteract'),minus:$('worldMinus'),plus:$('worldPlus'),status:$('status'),onComplete:()=>showQuiz(true),
     element:$('missionPanel'),stage,roomId:room.id,duration:stage.seconds,
     elapsed:()=>Math.max(0,(classroom.now()-room.startAt)/1000),
     symbolTexture,
@@ -800,7 +802,7 @@ function showTargets() {
   icon.dispose();
   $('fragmentName').textContent = puzzle.marker;
   $('fragmentPanel').classList.remove('hidden');
-  $('status').textContent = 'Inspeção: até ' + CONFIG.practicalPoints + ' pontos. A pergunta abre ao fim do tempo.';
+  $('status').textContent = 'Marque as células. Ao completar as marcações, a pergunta será aberta.';
   puzzle.cells.forEach((symbol,index) => {
     const [x,z] = CELL_PODS[index];
     const map = symbolTexture(symbol,'#24464e');
@@ -824,7 +826,7 @@ function scanCells() {
     marker.sprite.material.color.setHex(state.marks.has(marker.index) ? 0xffc66d : 0xffffff);
     if(distance < nearestDistance) { nearestDistance = distance; nearestCell = marker; }
   }
-  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + '/' + state.targetLimit + ' marcadas' + (state.marks.size === state.targetLimit ? ' · Desmarque para trocar uma escolha.' : ' · Busque o fragmento indicado.');
+  $('status').textContent = reefSector(player.z) + ' · ' + state.marks.size + '/' + state.targetLimit + ' marcadas' + (state.marks.size === state.targetLimit ? ' · Inspeção concluída.' : ' · Busque o fragmento indicado.');
   const button = $('scanCell');
   const selected = nearestCell && state.marks.has(nearestCell.index);
   button.disabled = !nearestCell || (!selected && state.marks.size >= state.targetLimit);
@@ -840,11 +842,13 @@ function toggleCell() {
   }
   nearestCell.pulse = 1;
   scanCells();
+  if(state.marks.size===state.targetLimit)showQuiz(true);
 }
-function showQuiz() {
+function showQuiz(early=false) {
   const activitySeconds=currentStage().seconds || (activeMap==='targets'?CONFIG.targetSeconds:0);
-  if(activitySeconds && classroom.now()<room.startAt+activitySeconds*1000)return;
+  if(!early && activitySeconds && classroom.now()<room.startAt+activitySeconds*1000)return;
   if(missionPanel){missionPayload=missionPanel.finish();}
+  classroom.beginQuiz({marks:[...state.marks],mission:missionPayload});
   clearMarkers();
   resetInput();
   setPhase('quiz');
@@ -855,6 +859,7 @@ function showQuiz() {
     ? (state.raceMs === null ? 'Tempo da corrida esgotado.' : 'Entrega concluída em ' + (state.raceMs / 1000).toFixed(2) + ' s.')
     : currentStage().seconds ? 'Atividade prática registrada. Responda para somar até '+CONFIG.quizPoints+' pontos.'
     : 'Inspeção encerrada: ' + state.marks.size + '/' + state.targetLimit + ' marcações registradas. A inspeção vale até ' + CONFIG.practicalPoints + ' pontos e esta pergunta vale ' + CONFIG.quizPoints + '.';
+  $('challengeHelp').textContent+=' Quanto mais rápido responder corretamente, mais pontos.';
   const choices = $('challengeChoices');
   choices.className = 'quizChoices';
   choices.replaceChildren();
@@ -871,10 +876,7 @@ function showQuiz() {
     choices.append(button);
   });
   setClock(CONFIG.quizSeconds);
-  if (activitySeconds) {
-    state.deadline = performance.now() + room.startAt + (activitySeconds + CONFIG.quizSeconds) * 1000 - classroom.now();
-    updateClock(performance.now());
-  }
+  updateClock(performance.now());
 }
 
 function finishAttempt(answer) {
@@ -1189,6 +1191,8 @@ function frame() {
     }
   } else if (state.phase === 'mission') {
     updateClock(nowMs);
+    moving=movePlayer(dt);
+    const turn=player.faceTarget-player.facing;player.facing+=Math.atan2(Math.sin(turn),Math.cos(turn))*Math.min(1,dt*12);
     missionPanel?.update();
     if(state.remaining<=0)showQuiz();
   } else if (state.phase === 'quiz') {
@@ -1299,7 +1303,7 @@ $('againBtn').addEventListener('click', () => {
 $('restartBtn').addEventListener('click',()=>classroom.send('reset'));
 $('leaveRoom').addEventListener('click',()=>classroom.leave());
 $('scanCell').addEventListener('click', toggleCell);
-window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
+window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) { if(state.phase==='mission')missionPanel?.interact();else toggleCell(); } });
 classroom.setPositionSource(() => {
   if (!activeRound || !['playing','quiz','mission'].includes(state.phase)) return null;
   return { round:activeRound, x:player.x, z:player.z, facing:player.facing, char:state.charId };

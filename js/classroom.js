@@ -7,6 +7,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
   let room = null;
   let busy = false;
   let queued = null;
+  let quizQueued=null;
   let retryAt = 0;
   let offset = 0;
   let readPosition = () => null;
@@ -49,6 +50,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
       room = data;
       if(data.joined)direct.sync(data);else direct.close();
       if (queued && (room.id !== queued.room || room.stage !== queued.stage || room.submitted || room.phase !== 'playing')) queued = null;
+      if(quizQueued&&(room.id!==quizQueued.room||room.stage!==quizQueued.stage||room.submitted||room.phase!=='playing'))quizQueued=null;
       onUpdate(data);
       return true;
     } catch (error) {
@@ -62,7 +64,10 @@ function connectClassroom(onUpdate, onError, onPositions) {
 
   function tick() {
     if (document.hidden || busy || Date.now() < retryAt) return;
-    if (queued) {
+    if(quizQueued) {
+      const request=quizQueued;
+      send('quiz',request).then(ok=>{if(ok&&quizQueued===request)quizQueued=null;});
+    } else if (queued) {
       const action = queued.retryRead ? 'read' : 'submit';
       send(action, action === 'submit' ? queued : {}).then(ok => {
         if (queued) queued.retryRead = !ok || action === 'submit';
@@ -109,7 +114,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
   setTimeout(pollMotion, 200);
   function leave() {
     const participating=entered;
-    entered=false;revision++;busy=false;queued=null;direct.close();
+    entered=false;revision++;busy=false;queued=null;quizQueued=null;direct.close();
     if(!participating)return;
     const payload=JSON.stringify({id,room:room?.id,stage:room?.stage,action:'leave'});
     let sent=false;
@@ -126,6 +131,7 @@ function connectClassroom(onUpdate, onError, onPositions) {
   return {
     setPositionSource(source) { readPosition = source; },
     send, leave, now: () => Date.now() + offset,
+    beginQuiz(payload){quizQueued={...payload,room:room.id,stage:room.stage};tick();},
     submit(values) {
       queued = { ...values, room: room.id, stage: room.stage, retryRead: false };
       tick();

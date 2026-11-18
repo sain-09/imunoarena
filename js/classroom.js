@@ -1,11 +1,9 @@
 'use strict';
 
 function connectClassroom(onUpdate, onError, onPositions) {
-  let id = localStorage.getItem('imunoarena-player');
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem('imunoarena-player', id);
-  }
+  const id = crypto.randomUUID();
+  let entered=false;
+  let revision=0;
   let room = null;
   let busy = false;
   let queued = null;
@@ -33,31 +31,37 @@ function connectClassroom(onUpdate, onError, onPositions) {
   async function send(action, values = {}) {
     if (busy) return false;
     busy = true;
+    const version=revision;
     const start = Date.now();
     try {
       const response = await fetch('/.netlify/functions/sala', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, action, room: room?.id, stage: room?.stage, ...values }),
+        body: JSON.stringify({ id, action, room: room?.id, stage: room?.stage, present:entered&&!document.hidden, ...values }),
         signal: AbortSignal.timeout(8000)
       });
       const data = await response.json();
+      if(version!==revision)return false;
       if (!response.ok) throw new Error(data.error);
+      if(action==='join')entered=!!data.joined;
+      if(!entered){data.joined=false;data.host=false;}
+      if(!data.joined)entered=false;
       offset = data.now - (start + Date.now()) / 2;
       room = data;
-      direct.sync(data);
+      if(data.joined)direct.sync(data);else direct.close();
       if (queued && (room.id !== queued.room || room.stage !== queued.stage || room.submitted || room.phase !== 'playing')) queued = null;
       onUpdate(data);
       return true;
     } catch (error) {
+      if(version!==revision)return false;
       onError(error instanceof SyntaxError ? 'Não foi possível acessar a sala. Confira a conexão e a publicação da função no Netlify.' : 'Falha na sala. ' + error.message);
       return false;
     } finally {
-      busy = false;
+      if(version===revision)busy = false;
     }
   }
 
   function tick() {
-    if (busy || Date.now() < retryAt) return;
+    if (document.hidden || busy || Date.now() < retryAt) return;
     if (queued) {
       const action = queued.retryRead ? 'read' : 'submit';
       send(action, action === 'submit' ? queued : {}).then(ok => {
@@ -103,10 +107,25 @@ function connectClassroom(onUpdate, onError, onPositions) {
     setTimeout(pollMotion,Math.max(70,delay-(performance.now()-sent))+Math.random()*55);
   }
   setTimeout(pollMotion, 200);
+  function leave() {
+    const participating=entered;
+    entered=false;revision++;busy=false;queued=null;direct.close();
+    if(!participating)return;
+    const payload=JSON.stringify({id,room:room?.id,stage:room?.stage,action:'leave'});
+    let sent=false;
+    try{sent=!!navigator.sendBeacon?.('/.netlify/functions/sala',new Blob([payload],{type:'application/json'}));}catch{}
+    if(!sent) {
+      fetch('/.netlify/functions/sala',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(()=>{});
+    }
+    if(room){room={...room,joined:false,host:false};onUpdate(room);}
+  }
+  window.addEventListener('pagehide',leave);
+  window.addEventListener('pageshow',()=>tick());
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   tick();
   return {
     setPositionSource(source) { readPosition = source; },
-    send, now: () => Date.now() + offset,
+    send, leave, now: () => Date.now() + offset,
     submit(values) {
       queued = { ...values, room: room.id, stage: room.stage, retryRead: false };
       tick();

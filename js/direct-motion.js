@@ -29,6 +29,9 @@ function createDirectMotion(id, receive) {
     const nextHub=Math.min(...snapshot.players.map(p=>p.key));
     if(room?.id!==snapshot.id || key!==self || nextStar!==star || nextHub!==hub)reset();
     if(room && room.stage!==snapshot.stage){latest.clear();dirty.clear();lastLocal=null;}
+    const identity=player=>player.connection||player.name||String(player.key);
+    const changed=new Set((room?.players||[]).filter(old=>!snapshot.players.some(p=>p.key===old.key&&identity(p)===identity(old))).map(p=>p.key));
+    for(const changedKey of changed){drop(changedKey);latest.delete(changedKey);dirty.delete(changedKey);}
     room=snapshot;self=key;star=nextStar;hub=nextHub;
     const keys=new Set(wanted().map(p=>p.key));
     for(const key of links.keys())if(!keys.has(key))drop(key);
@@ -168,5 +171,5 @@ function createDirectMotion(id, receive) {
       return p.key!==self && link?.channel?.readyState==='open' && link.failedAt==null && latest.has(p.key) && clock()-latest.get(p.key).received<900;
     }).map(p=>p.key);
   }
-  return {sync,tick,send,covered};
+  return {sync,tick,send,covered,close(){reset();room=null;self=-1;}};
 }

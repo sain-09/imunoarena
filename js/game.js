@@ -598,6 +598,7 @@ function waitForScores() {
   $('resSummary').textContent = 'Aguardando resultados da turma.';
   $('standings').replaceChildren();
   $('againBtn').classList.add('hidden');
+  $('restartBtn').classList.add('hidden');
 }
 
 function handleRoom(updated) {
@@ -608,23 +609,31 @@ function handleRoom(updated) {
     scheduled = null;
   }
   room = updated;
+  $('leaveRoom').classList.toggle('hidden',!room.joined);
   $('connection').classList.add('hidden');
-  if (room.phase === 'lobby') {
+  if (room.phase === 'lobby' || !room.joined) {
+    activeRound=null;
+    livePeers.clear();
     clearTimeout(scheduled);
     scheduled = null;
     played = null;
+    state.stageIndex=0;
+    missionPanel?.dispose();missionPanel=null;missionPayload=null;
     resetInput();
     setPhase('menu');
     $('menu').classList.remove('hidden');
     for (const id of ['result', 'challenge', 'hud']) $(id).classList.add('hidden');
     $('playerName').disabled = room.joined;
     if (room.joined) $('playerName').value = room.players.find(player => player.me).name;
-    $('roomInfo').textContent = room.joined
+    const accepting=room.phase==='lobby';
+    $('roomInfo').textContent = !accepting
+      ? 'Há um campeonato em andamento. Aguarde uma nova partida para começar pela primeira fase.'
+      : room.joined
       ? (room.host ? 'Você abriu a sala. Comece quando a turma estiver pronta.' : 'Aguardando o início da partida.')
       : 'Digite seu nome para entrar na sala da turma.';
     $('roomPlayers').textContent = room.players.map(player => player.name).join(' · ');
-    $('startBtn').textContent = room.joined ? 'Começar campeonato' : 'Entrar na sala';
-    $('startBtn').disabled = !mapReady || (room.joined && !room.host);
+    $('startBtn').textContent = !accepting?'Aguardando novo campeonato':room.joined ? 'Começar campeonato' : 'Entrar na sala';
+    $('startBtn').disabled = !accepting || !mapReady || (room.joined && !room.host);
     hideIntro();
     showMap('factory');
     player.x = START_POS.x;
@@ -924,6 +933,7 @@ function showStandings(stage) {
   }
   $('againBtn').textContent = final ? 'Abrir novo campeonato' : 'Próxima prova';
   $('againBtn').classList.toggle('hidden', !room.host);
+  $('restartBtn').classList.toggle('hidden',!room.host||final);
 }
 
 function movePlayer(dt) {
@@ -1286,6 +1296,8 @@ $('startBtn').addEventListener('click', () => {
 $('againBtn').addEventListener('click', () => {
   classroom.send(room.stage === CONFIG.stages.length - 1 ? 'reset' : 'next');
 });
+$('restartBtn').addEventListener('click',()=>classroom.send('reset'));
+$('leaveRoom').addEventListener('click',()=>classroom.leave());
 $('scanCell').addEventListener('click', toggleCell);
 window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
 classroom.setPositionSource(() => {

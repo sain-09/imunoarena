@@ -13,10 +13,11 @@ export default async function handler(request) {
   if (typeof body?.id !== 'string' || !uuid.test(body.id)) return reply({},400);
   const store = getStore({name:'imunoarena',consistency:'strong'});
   const room = await store.get('sala',{type:'json'});
-  const self = room?.players.findIndex(player => player.id === body.id) ?? -1;
+  const self = room?.players.findIndex(player => player.id === body.id && player.online!==false) ?? -1;
   if (!room || room.id !== body.room || self < 0) return reply({signals:[]});
-  const hub=0;
-  const allowed=key=>key!==self && (room.players.length<=8 || self===hub || key===hub);
+  const hub=room.players.findIndex(player=>player.online!==false);
+  const count=room.players.filter(player=>player.online!==false).length;
+  const allowed=key=>room.players[key]?.online!==false && key!==self && (count<=8 || self===hub || key===hub);
   const prefix = 'rtc/' + room.id + '/';
   if (body.signal) {
     const {to,type,sdp,offerId} = body.signal;

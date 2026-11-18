@@ -11,7 +11,13 @@ Campeonato de imunologia no navegador, com uma sala compartilhada por site e at�
 
 A sala usa Netlify Functions e Netlify Blobs. Para esta versão, publique pelo repositório integrado ao Netlify. Para testar localmente, instale as dependências com npm install e execute npx netlify dev. O Live Server sozinho serve os arquivos estáticos, mas não executa a função da sala.
 
-O papel de anfitrião fica vinculado ao navegador que abriu a sala. Se a página for recarregada, reabra a mesma URL no mesmo navegador. Quem chega com o campeonato em andamento acompanha o placar e entra no próximo lobby.
+Cada abertura da página recebe uma identidade temporária. Abrir o link ou deixar uma aba no menu não inscreve um jogador: é preciso tocar em Entrar na sala. Recarregar a página não restaura automaticamente a participação nem a fase anterior.
+
+Participantes confirmam presença enquanto a página estiver visível. Fechar a página ou usar Sair da sala tenta comunicar a saída imediatamente. Se esse aviso não chegar, a presença expira após 15 segundos sem confirmação, na próxima consulta à sala. Abas em segundo plano param de confirmar presença. Jogadores desconectados deixam de contar na espera por resultados e, se o anfitrião sair, outro participante conectado assume o controle. Os identificadores dos colegas permanecem estáveis para a sincronização dos avatares.
+
+Quando não sobra ninguém conectado, a sala anterior é encerrada e a próxima entrada encontra o lobby da primeira fase, sem pontos anteriores. Estados antigos publicados antes dessa verificação de presença também são descartados. Se outra turma ainda estiver jogando, quem abrir o link fica no menu aguardando um novo campeonato; não entra automaticamente na fase em andamento e não reinicia a partida dos demais.
+
+Na tela de resultado de qualquer fase, o anfitrião pode usar Novo campeonato do início para zerar a pontuação e voltar à fase 1 com os participantes ainda conectados.
 
 ## Provas
 
@@ -56,7 +62,7 @@ Referências: [TURN e bloqueios de rede](https://developers.cloudflare.com/realt
 
 ### Verificação
 
-`npm test` executa simulações de 2, 8 e 40 jogadores, troca pelas oito fases, reconexão, descarte de duplicatas, negociação ICE e emissão de credenciais TURN temporárias. Também verifica os dez modelos GLB, os pivôs das animações, os limites de geometria e o cache de cenários. Os testes não medem a latência real nem o desempenho gráfico dos celulares. Depois de publicar uma mudança no protocolo, todos devem recarregar a página antes de entrar na sala. Teste com dois celulares e depois com a turma, tanto na mesma rede quanto entre Wi-Fi e dados móveis.
+`npm test` executa simulações de 2, 8 e 40 jogadores, troca pelas oito fases, reconexão, descarte de duplicatas, negociação ICE e emissão de credenciais TURN temporárias. Também verifica os dez modelos GLB, os pivôs das animações, os limites de geometria e o cache de cenários, além da expiração de jogadores ausentes, saída, mudança de anfitrião, limpeza de salas antigas e entrada pelo lobby inicial. Os testes não medem a latência real nem o desempenho gráfico dos celulares. Depois de publicar uma mudança no protocolo, todos devem recarregar a página antes de entrar na sala. Teste com dois celulares e depois com a turma, tanto na mesma rede quanto entre Wi-Fi e dados móveis.
 
 ### Modelos e memória
 

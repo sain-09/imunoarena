@@ -20,7 +20,7 @@ export default async function handler(request) {
   const now = Date.now();
   if (!room || room.id !== body.room || room.stage !== body.stage || room.phase !== 'playing' ||
       now < room.startAt || now >= room.closeAt || room.submissions[body.id] ||
-      !room.players.some(player => player.id === body.id)) return reply({ positions: [] });
+      !room.players.some(player => player.id === body.id && player.online!==false)) return reply({ positions: [] });
 
   // Each player updates an independent entry, away from the lobby/score transaction.
   const prefix = 'motion/' + room.id + '/' + room.stage + '/';
@@ -38,7 +38,7 @@ export default async function handler(request) {
     });
   }
   const positions = await Promise.all(room.players.map(async (player,key) => {
-    if (player.id === body.id || room.submissions[player.id] || exclude.has(key)) return null;
+    if (player.id === body.id || player.online===false || room.submissions[player.id] || exclude.has(key)) return null;
     const entry = await store.get(prefix + player.id,{type:'json'});
     if (!entry || now - entry.at > freshForMs) return null;
     return { ...entry, key, name: player.name };

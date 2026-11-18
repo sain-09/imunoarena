@@ -138,6 +138,8 @@ function createMissionPanel({element, stage, roomId, duration, elapsed, symbolTe
       const current=time<5?-1:Math.min(5,Math.floor((time-5)/((duration-5)/6)));
       if(current===encounter)return;
       encounter=current;content.replaceChildren();
+      const signature=current<0?mission.signature:mission.encounters[current];
+      onVisual([current,null,signature]);
       if(current<0){
         heading('Primeiro encontro: memorize esta assinatura.');
         symbol(mission.signature,content);
@@ -152,7 +154,7 @@ function createMissionPanel({element, stage, roomId, duration, elapsed, symbolTe
           payload.answers[current]=value;
           yes.disabled=no.disabled=true;
           status.textContent='Reconhecimento registrado. Aguarde o próximo encontro.';
-          onVisual([current,value]);
+          onVisual([current,value?1:0,signature]);
         }
         status.textContent='Compare com o agente do primeiro encontro.';
       }

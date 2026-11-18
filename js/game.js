@@ -313,6 +313,7 @@ const spriteGeometry = new THREE.Vector3();
 const livePeers = new Map();
 const peerLifetimeMs = 6000;
 let activeRound = null;
+let memoryVisual = null;
 function roundKey(snapshot) {
   return snapshot.id + '/' + snapshot.stage;
 }
@@ -323,6 +324,7 @@ function loadArena(id) {
     arenaLoads.set(id, loader.loadAsync('models/' + id + '.glb').then(gltf => {
       const model = gltf.scene;
       if(id === 'inflammation') prepareInflammation(model);
+      if(id === 'memory') prepareMemory(model);
       model.visible = activeMap === id;
       scene.add(model);
       arenaModels[id] = model;
@@ -361,7 +363,48 @@ function prepareInflammation(model) {
   }
   model.userData.inflammationHandles=handles;
 }
+function prepareMemory(model) {
+  const handles={};
+  for(const [name,position] of [
+    ['memory_agent',[0,3.25,-.5]],['memory_lever',[5.98,.88,7.43]]
+  ]) {
+    const part=model.getObjectByName(name);
+    if(!part)continue;
+    const pivot=new THREE.Group();
+    pivot.position.set(...position);
+    model.add(pivot);
+    pivot.add(part);
+    part.position.set(...position.map(value=>-value));
+    handles[name]=pivot;
+  }
+  model.userData.memoryHandles=handles;
+  model.userData.memoryClock=0;
+}
 function updateArena(dt) {
+  if(activeMap === 'memory') {
+    const model=arenaModels.memory;
+    if(model) {
+      const [,answer,signature]=memoryVisual || [-1,null,0];
+      const handles=model.userData.memoryHandles || {};
+      const blend=reducedMotion.matches?1:1-Math.exp(-10*dt);
+      if(!reducedMotion.matches)model.userData.memoryClock+=dt;
+      const time=model.userData.memoryClock;
+      if(handles.memory_agent) {
+        handles.memory_agent.rotation.y=reducedMotion.matches?0:time*.23;
+        handles.memory_agent.position.y=3.25+(reducedMotion.matches?0:Math.sin(time*1.7)*.12);
+      }
+      for(let i=0;i<4;i++) {
+        const symbol=model.getObjectByName('memory_symbol_'+i);
+        if(symbol)symbol.scale.setScalar(i===signature?1:0);
+      }
+      const seal=model.getObjectByName('memory_seal');
+      const gate=model.getObjectByName('memory_gate');
+      // These movements acknowledge a choice; they do not reveal its correctness.
+      if(seal)seal.position.y+=((answer===1?-.12:0)-seal.position.y)*blend;
+      if(gate)gate.position.y+=((answer===0?-.78:0)-gate.position.y)*blend;
+      if(handles.memory_lever)handles.memory_lever.rotation.x+=((answer===0?-.46:0)-handles.memory_lever.rotation.x)*blend;
+    }
+  }
   if(activeMap === 'inflammation') {
     const model=arenaModels.inflammation;
     const values=model?.userData.inflammationValues || [25,25,25];
@@ -688,6 +731,7 @@ function startMission() {
     symbolTexture,
     onVisual:values=>{
       const model=arenaModels[activeMap];
+      if(activeMap === 'memory') memoryVisual=values.slice();
       if(activeMap === 'inflammation' && model) model.userData.inflammationValues=values.slice();
       if(activeMap === 'barriers' && model) {
         const positions=[-8.16,-2.72,2.72,8.16];

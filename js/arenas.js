@@ -15,7 +15,7 @@ const MISSION_ARENAS = {
   barriers:{title:'Resposta imunológica na pele',tint:0x744750,fog:0xc3918d,camera:[1,17,27],look:[0,1,-1]},
   vaccine:{title:'Pavilhão da vacinação',tint:0x27365d,fog:0x899ab2,camera:[1.5,22,30],look:[0,1,-1]},
   inflammation:{title:'Inflamação tissular',tint:0x5c263a,fog:0xa8606a,camera:[.8,19,29],look:[0,.6,-1]},
-  memory:{title:'Arquivo imunológico',tint:0x142339,fog:0x4b657e,camera:[-4,19,26],look:[0,1,-2]}
+  memory:{title:'Observatório da memória imunológica',tint:0x172741,fog:0x647492,camera:[1,21,30],look:[0,1.8,-1]}
 };
 for(const [id,settings] of Object.entries(MISSION_ARENAS)) {
   ARENAS[id]={...settings,start:10,end:-15,width:11,walls:[]};

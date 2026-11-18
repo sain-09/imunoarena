@@ -10,10 +10,16 @@ const ARENAS = {
     [-8,10,3,4],[5,6,3,4],[-2,0,4,5],[8,-7,4,3],[-7,-12,4,3],[2,-18,5,3],[-8,-25,3,4]
   ] }
 };
-for (const [id,tint,fog] of [
-  ['patrol',0x233b5b,0x4c6181],['barriers',0x653447,0x976578],
-  ['vaccine',0x44335d,0x716588],['inflammation',0x61283c,0x985069],['memory',0x163e50,0x476f83]
-]) ARENAS[id]={title:id,tint,fog,start:10,end:-15,width:11,walls:[]};
+const MISSION_ARENAS = {
+  patrol:{title:'Três frentes de defesa',tint:0x283e58,fog:0x6c796e,camera:[2,18,27],look:[0,1,-3]},
+  barriers:{title:'Corte da pele',tint:0x674839,fog:0xb3856c,camera:[8,15,24],look:[0,1,-3]},
+  vaccine:{title:'Pavilhão da vacinação',tint:0x27365d,fog:0x899ab2,camera:[-5,18,25],look:[0,1,-4]},
+  inflammation:{title:'Janela vascular',tint:0x5c263a,fog:0xa8606a,camera:[8,18,24],look:[0,.6,-3]},
+  memory:{title:'Arquivo imunológico',tint:0x142339,fog:0x4b657e,camera:[-4,19,26],look:[0,1,-2]}
+};
+for(const [id,settings] of Object.entries(MISSION_ARENAS)) {
+  ARENAS[id]={...settings,start:10,end:-15,width:11,walls:[]};
+}
 const CELL_PODS = [
   [-10,15],[-3,13],[7,15],[10,9],[-10,4],[-5,5],[1,8],[9,0],[-9,-5],[-4,-6],
   [3,-3],[11,-12],[3,-11],[-10,-17],[-3,-16],[7,-18],[-5,-23],[0,-25],[9,-26],[4,-30]

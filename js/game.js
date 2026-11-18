@@ -641,6 +641,7 @@ function startTurn() {
 function startMission() {
   const stage=currentStage();
   setPhase('mission');
+  $('missionPanel').dataset.theme=stage.id;
   $('missionPanel').classList.remove('hidden');
   setClock(stage.seconds);
   state.deadline=performance.now()+room.startAt+stage.seconds*1000-classroom.now();
@@ -927,6 +928,9 @@ function updateCamera(dt) {
   if (state.phase === 'menu') {
     camGoalPos.set(0, 3.8, player.z + 8.5);
     camGoalLook.set(0, 1.9, player.z);
+  } else if (ARENAS[activeMap].camera) {
+    camGoalPos.set(...ARENAS[activeMap].camera);
+    camGoalLook.set(...ARENAS[activeMap].look);
   } else {
     const fx = player.x * 0.7;
     const compactLandscape = camera.aspect > 1.25 && window.innerHeight < 600;

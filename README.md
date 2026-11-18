@@ -37,3 +37,5 @@ As corridas têm largada comum e a classificação usa o tempo de cada jogador. 
 Os três cenários ficam em models/factory.glb, models/race.glb e models/targets.glb, com texturas embutidas. js/arenas.js define os limites e as colisões correspondentes.
 
 Para salas de até 16 jogadores, o movimento tenta usar um canal direto WebRTC. Redes que bloqueiam a conexão direta e salas maiores usam a função de movimento do Netlify. Pontuação e tempos continuam na função da sala.
+
+Os cenários das provas 4–8 usam plantas e objetos próprios. Patrulha reúne três tecidos, Primeira Linha mostra um corte em camadas da pele, Vacinação usa um pavilhão hexagonal, Inflamação mostra uma janela do vaso e Memória usa um arquivo circular de reconhecimento.

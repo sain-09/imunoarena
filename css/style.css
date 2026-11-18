@@ -318,3 +318,19 @@ body[data-phase="mission"] #qpanel { display:none; }
  .vaccine-links select { font-size:12px!important; }
  .mission-symbol { width:64px; height:64px; }
 }
+
+#missionPanel[data-theme="patrol"] { background:#f1deb1; border-color:#38526a; box-shadow:0 5px #38526a; border-radius:7px 22px 7px 22px; }
+#missionPanel[data-theme="patrol"] h2 { color:#38526a; }
+#missionPanel[data-theme="patrol"] .patrol-region { background:#e6d8b6; border-color:#b09865; }
+#missionPanel[data-theme="barriers"] { background:#ffe1c3; border-color:#935b47; box-shadow:0 5px #935b47; border-radius:20px 20px 6px 6px; border-bottom-width:9px; }
+#missionPanel[data-theme="barriers"] h2 { color:#864a3e; }
+#missionPanel[data-theme="barriers"] button { border-color:#b88262; background:#fff0d9; }
+#missionPanel[data-theme="vaccine"] { background:#edf3f9; border-color:#405da3; box-shadow:0 5px #405da3; border-radius:8px; }
+#missionPanel[data-theme="vaccine"] h2 { color:#405da3; }
+#missionPanel[data-theme="vaccine"] select { background:#fff; border-color:#94acd0; }
+#missionPanel[data-theme="inflammation"] { background:#ffe3dd; border-color:#ad4d60; box-shadow:0 5px #ad4d60; border-radius:26px 8px 26px 8px; }
+#missionPanel[data-theme="inflammation"] h2 { color:#9b3f53; }
+#missionPanel[data-theme="memory"] { background:#233955; color:#e6f1ef; border-color:#91bbb9; box-shadow:0 5px #142236; border-radius:24px; }
+#missionPanel[data-theme="memory"] h2 { color:#b7ece4; }
+#missionPanel[data-theme="memory"] .mission-status { color:#a6cdd8; }
+#missionPanel[data-theme="memory"] button { background:#dce9ef; border-color:#7b9dbb; }

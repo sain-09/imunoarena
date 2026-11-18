@@ -11,7 +11,7 @@ const ARENAS = {
   ] }
 };
 const MISSION_ARENAS = {
-  patrol:{title:'Três frentes de defesa',tint:0x283e58,fog:0x6c796e,camera:[2,18,27],look:[0,1,-3]},
+  patrol:{title:'Comando Imunológico',tint:0x293e67,fog:0x7184a6,camera:[0,23,30],look:[0,1,-3]},
   barriers:{title:'Corte da pele',tint:0x674839,fog:0xb3856c,camera:[8,15,24],look:[0,1,-3]},
   vaccine:{title:'Pavilhão da vacinação',tint:0x27365d,fog:0x899ab2,camera:[-5,18,25],look:[0,1,-4]},
   inflammation:{title:'Janela vascular',tint:0x5c263a,fog:0xa8606a,camera:[8,18,24],look:[0,.6,-3]},

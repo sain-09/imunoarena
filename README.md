@@ -94,3 +94,7 @@ A sequência completa das oito fases foi percorrida em dois contextos Edge/WebGL
 ### Objetivos guiados das fases 6–8
 
 A fase 6 sinaliza apenas o próximo destino; destinos incorretos não consomem uma tentativa. A fase 7 permite carregar uma amostra por vez e mantém a linha apontando para a bancada durante o transporte. Na fase 8, a observação inicial só começa quando o jogador a inicia no projetor, e as duas respostas ficam disponíveis por proximidade após os cinco segundos. As três fases continuam registrando conclusão e acerto da prática no servidor, com bônus por rapidez e pergunta liberada para a turma quando todos terminam.
+
+### Tela inicial temática
+
+Menu com ilustração vetorial própria de hemácia, leucócito e anticorpo, seleção visual dos personagens, campo de nome e participantes em etiquetas. Layout adaptado para desktop, celular em retrato e paisagem, com rolagem independente do formulário em telas baixas. Animações respeitam a preferência por movimento reduzido. Testado automaticamente no Edge/WebGL em 1280×800, 390×844 e 844×390; aparelhos físicos ainda precisam de validação.

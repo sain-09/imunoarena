@@ -412,3 +412,87 @@ body[data-phase="playing"] #joy,body[data-phase="mission"] #joy {display:block!i
 #intro .intro-card {align-items:stretch;}
 #intro .intro-copy,#intro .intro-footer {width:100%;}
 #introKicker {justify-self:start;width:fit-content;max-width:calc(100% - 60px);}
+/* Lobby: expedição cartoon pelo organismo. */
+body[data-phase="menu"]::before {content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(110deg,#102f3bc7,#163d3d70);}
+#menu {z-index:2;top:max(18px,env(safe-area-inset-top));bottom:auto;display:grid;grid-template-columns:1fr 1fr;gap:0;width:min(94vw,960px);max-height:calc(100dvh - 116px);padding:0;overflow:auto;text-align:left;border:4px solid #20394b;border-radius:28px 28px 28px 10px;background:#fff8e8;box-shadow:0 9px #142c3e,0 22px 55px #10213166;}
+.lobby-hero {position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:28px 26px 22px;background:#145861;color:#fff7df;border-right:3px solid #20394b;}
+#menu .lobby-tag {display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.09em;color:#b6efe0;margin:0 0 14px;font-weight:800;}
+.live-cell {width:9px;height:9px;flex:none;border-radius:50%;background:#ffda77;box-shadow:0 0 0 4px #ffda7728;}
+#menu h1 {font-size:clamp(38px,5.6vw,59px);line-height:1;letter-spacing:-.05em;color:#fff9e9;text-shadow:0 4px #083e49;margin:0 0 13px;font-weight:900;}
+#menu h1 span {color:#ffda77;}
+#menu .lobby-lead {font-size:clamp(20px,3vw,29px);line-height:1.22;color:#e5f9ef;letter-spacing:-.025em;margin:0;font-weight:800;}
+.lobby-art {width:calc(100% + 48px);margin:8px -24px 0;min-height:100px;max-height:240px;flex-shrink:0;}
+.lobby-facts {display:flex;flex-wrap:wrap;gap:7px;}
+.lobby-facts>span {display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid #88b6b1;border-radius:9px;font-size:12px;background:#104852;color:#ecfff8;font-weight:700;}
+.lobby-facts strong {color:#ffda77;font-size:16px;}
+.lobby-facts svg {width:17px;height:17px;}
+#menu .lobby-caption {color:#bce3d9;font-size:12px;line-height:1.5;font-weight:400;margin:14px 0 0;}
+.lobby-setup {padding:26px 25px 18px;min-width:0;}
+.lobby-heading {display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.setup-kicker {font-size:10px;letter-spacing:.12em;font-weight:900;color:#65726a;}
+.lobby-heading h2 {font-size:27px;line-height:1.15;color:#20394b;margin:5px 0 0;letter-spacing:-.03em;}
+.lobby-step {display:grid;place-items:center;border:2px solid #20394b;background:#ffdb80;border-radius:13px;width:43px;height:43px;color:#20394b;font-weight:900;box-shadow:0 3px #20394b;}
+.character-choice {border:0;margin:0 0 17px;padding:0;min-width:0;}
+.character-choice legend,.name-label {display:block;padding:0;margin:0 0 9px;font-size:13px;color:#293f50;font-weight:800;}
+#menu #chars {gap:10px;margin:0;}
+#menu .charBtn {position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px solid #c7d3cb;background:#fffdf6;color:#344857;box-shadow:0 3px #c7d3cb;border-radius:15px;padding:12px 8px;font-size:13px;min-height:105px;transition:background .18s,border-color .18s,transform .18s;}
+#menu .charBtn .medic-icon {display:block;width:52px;height:52px;margin:0;}
+#menu .charBtn.active {background:#dbf1e6;border:2px solid #24796d;box-shadow:0 3px #24796d;}
+#menu .charBtn.active::after {content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;background:#248577;border:2px solid #fff8e8;border-radius:50%;box-shadow:0 0 0 1px #24796d;}
+#menu .charBtn:hover {transform:translateY(-2px);border-color:#24796d;}
+#menu .charBtn:focus-visible,#menu #playerName:focus-visible,#menu #startBtn:focus-visible {outline:3px solid #e29d26;outline-offset:3px;}
+#menu #playerName {width:100%;margin:0 0 17px;padding:12px 13px;min-height:47px;border:2px solid #b9c9c4;border-radius:12px;background:#fffef9;color:#20394b;font-size:16px;box-shadow:inset 0 2px #dbe5df50;user-select:text;}
+#menu #playerName::placeholder {color:#6a7b7b;}
+#menu #playerName:disabled {background:#edf2e9;color:#455c5a;}
+.crew-panel {border:1px solid #cbd8cc;border-radius:12px;padding:11px 12px;background:#eff3e9;}
+.crew-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.crew-heading strong {font-size:12px;color:#2f4c4a;}
+#roomCount {font-size:10px;color:#536f67;border:1px solid #bbcdc0;border-radius:20px;padding:3px 7px;white-space:nowrap;}
+#menu #roomPlayers {display:flex;flex-wrap:wrap;gap:5px;max-height:76px;overflow:auto;color:#526c65;font-weight:400;font-size:12px;line-height:1.4;margin:8px 0 0;}
+.crew-chip {display:inline-block;background:#fffaf0;border:1px solid #ccd4c3;border-radius:7px;padding:4px 7px;color:#40584f;font-size:11px;overflow-wrap:anywhere;}
+.crew-chip.is-me {background:#d7eee0;border-color:#92bba5;color:#215a49;font-weight:800;}
+.lobby-entry {margin-top:13px;}
+#menu #roomInfo {color:#3f5b60;font-size:12px;line-height:1.4;font-weight:600;margin:0 0 11px;}
+#menu #startBtn {display:block;width:100%;border:2px solid #193f49;border-radius:13px;background:#ffcf68;color:#213b48;text-shadow:none;box-shadow:0 4px #193f49;padding:12px 10px;font-size:17px;}
+#menu #startBtn:disabled {opacity:.65;background:#e7d8af;color:#596258;}
+#menu .lobby-note {font-size:10px;line-height:1.4;font-weight:400;color:#6c7b73;text-align:center;margin:10px 0 0;}
+@media(min-width:760px) and (min-height:620px){#menu {top:50%;transform:translate(-50%,-50%);animation:lobby-wide-arrival .4s ease-out both;}@keyframes lobby-wide-arrival{from{opacity:0;transform:translate(-50%,calc(-50% + 14px));}to{opacity:1;transform:translate(-50%,-50%);}}}
+@media(max-width:600px){
+ #menu {top:max(10px,env(safe-area-inset-top));grid-template-columns:1fr;width:min(94vw,440px);max-height:calc(100dvh - 104px);border-width:3px;}
+ .lobby-hero {padding:17px 19px 14px;border-right:0;border-bottom:3px solid #20394b;}
+ #menu .lobby-tag {font-size:8px;margin-bottom:8px;}
+ #menu h1 {font-size:43px;margin-bottom:8px;}
+ #menu .lobby-lead {font-size:17px;line-height:1.2;}
+ #menu .lobby-lead br {display:none;}
+ .lobby-art {position:absolute;width:175px;height:100px;min-height:0;max-height:none;right:-3px;bottom:2px;margin:0;opacity:.85;}
+ .lobby-facts {margin-top:12px;max-width:63%;gap:5px;}
+ .lobby-facts>span {font-size:10px;padding:4px 6px;}.lobby-facts>span:last-child {display:none;}
+ #menu .lobby-caption {display:none;}
+ .lobby-setup {padding:17px 18px 15px;}
+ .lobby-heading {margin-bottom:13px;}.lobby-heading h2{font-size:22px;}.setup-kicker{font-size:9px;}.lobby-step{width:35px;height:35px;font-size:13px;}
+ #menu .charBtn {min-height:79px;padding:8px;font-size:12px;gap:2px;}#menu .charBtn .medic-icon{width:41px;height:41px;}
+ .character-choice {margin-bottom:13px;}#menu #playerName{margin-bottom:13px;min-height:44px;padding:9px 11px;}
+ .crew-panel {padding:9px 10px;}#menu #roomInfo {font-size:11px;margin-bottom:8px;}.lobby-entry{margin-top:10px;}
+}
+@media(orientation:landscape) and (max-height:600px){
+ #menu {top:max(8px,env(safe-area-inset-top));width:min(94vw,940px);max-height:calc(100dvh - 94px);grid-template-columns:.85fr 1.15fr;}
+ .lobby-hero {padding:18px;}.lobby-setup {padding:16px 18px;}
+ #menu h1 {font-size:41px;}#menu .lobby-lead{font-size:19px;}.lobby-art{max-height:160px;}.lobby-facts>span{font-size:10px;padding:5px;}.lobby-caption{display:none;}
+}
+@media(prefers-reduced-motion:reduce){#menu,#menu .charBtn{animation:none;transition:none;}}
+@media(orientation:landscape) and (max-height:600px){
+ #menu {height:calc(100dvh - 94px);grid-template-rows:minmax(0,1fr);overflow:hidden;}
+ .lobby-setup {min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+ .lobby-hero {min-height:0;justify-content:center;}
+ #menu .lobby-tag{font-size:8px;margin-bottom:8px;}#menu h1{margin-bottom:8px;font-size:39px;}#menu .lobby-lead{font-size:17px;}
+ .lobby-art{max-height:100px;min-height:65px;margin-top:0;}.lobby-facts{gap:4px;}.lobby-facts>span{font-size:9px;padding:4px;}.lobby-facts>span:last-child{display:none;}
+}
+.blood-float {animation:cell-drift 4s ease-in-out infinite;}.defender-float{animation:cell-drift 5s ease-in-out infinite reverse;}
+@keyframes cell-drift{0%,100%{translate:0 0;}50%{translate:0 -5px;}}
+@media(prefers-reduced-motion:reduce){.blood-float,.defender-float{animation:none;}}
+body[data-phase="menu"] #leaveRoom {top:auto;bottom:max(14px,env(safe-area-inset-bottom));left:max(16px,env(safe-area-inset-left));right:auto;}
+@media(max-width:600px) and (orientation:portrait){
+ #menu .lobby-lead{position:relative;z-index:1;max-width:175px;}
+ #menu .lobby-lead br{display:block;}
+ .lobby-art{width:155px;height:90px;bottom:4px;}
+}

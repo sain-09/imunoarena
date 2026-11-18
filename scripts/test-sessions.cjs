@@ -77,7 +77,7 @@ async function clientTest(){
 function localLobbyTest(){
  const source=fs.readFileSync(path.join(__dirname,'../js/game.js'),'utf8');
  const fn=source.slice(source.indexOf('function handleRoom('),source.indexOf('function startTurn('));
- const nodes=new Map,views=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{classList:{toggle(){},add(){},remove(){}}});return nodes.get(id);};
+ const nodes=new Map,views=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{classList:{toggle(){},add(){},remove(){}},replaceChildren(){},append(){}});return nodes.get(id);};
  const context={room:null,activeRound:null,scheduled:null,played:null,livePeers:new Map,missionPanel:null,missionPayload:null,state:{stageIndex:7},player:{},mapReady:true,START_POS:{x:0,z:11},roundKey:r=>r.id+'/'+r.stage,clearTimeout(){},$:node,resetInput(){},setPhase(){},hideIntro(){},showMap:id=>views.push(id),refreshSelection(){},showStandings(){throw new Error('Visitante não pode pular para a fase antiga.');}};
  vm.runInNewContext(fn+'\nhandleRoom({id:"active",phase:"playing",stage:6,joined:false,players:[]});',context);
  assert.equal(context.state.stageIndex,0);assert.equal(views.at(-1),'factory');assert.equal(node('startBtn').disabled,true);

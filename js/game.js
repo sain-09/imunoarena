@@ -651,7 +651,10 @@ function handleRoom(updated) {
       : room.joined
       ? (room.host ? 'Você abriu a sala. Comece quando a turma estiver pronta.' : 'Aguardando o início da partida.')
       : 'Digite seu nome para entrar na sala da turma.';
-    $('roomPlayers').textContent = room.players.map(player => player.name).join(' · ');
+    $('roomCount').textContent=room.players.length+' '+(room.players.length===1?'participante':'participantes');
+    $('roomPlayers').replaceChildren();
+    if(!room.players.length)$('roomPlayers').textContent='Aguardando os primeiros exploradores.';
+    for(const participant of room.players){const chip=document.createElement('span');chip.className='crew-chip'+(participant.me?' is-me':'');chip.textContent=participant.name+(participant.me?' · você':'');$('roomPlayers').append(chip);}
     $('startBtn').textContent = !accepting?'Aguardando novo campeonato':room.joined ? 'Começar campeonato' : 'Entrar na sala';
     $('startBtn').disabled = !accepting || !mapReady || (room.joined && !room.host);
     hideIntro();
@@ -1304,8 +1307,8 @@ onResize();
 
 document.querySelectorAll('.charBtn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.charBtn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.charBtn').forEach(b => {b.classList.remove('active');b.setAttribute('aria-pressed','false');});
+    btn.classList.add('active');btn.setAttribute('aria-pressed','true');
     setCharacter(btn.dataset.char);
   });
 });

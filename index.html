@@ -24,19 +24,39 @@
   </div>
 </div>
 
-<div id="menu" class="card">
-  <h1>ImunoArena</h1>
-  <p>Entre na sala da turma para disputar as oito provas no seu celular.</p>
-  <div id="chars">
-    <button class="charBtn active" data-char="male"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v12H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#3378c8" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#3378c8" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeiro</button>
-    <button class="charBtn" data-char="female"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v8q6 3 2 10h-5l-2-8H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#d7434b" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#d7434b" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeira</button>
+<section id="menu" class="card" aria-labelledby="menuTitle">
+  <div class="lobby-hero">
+    <p class="lobby-tag"><span class="live-cell" aria-hidden="true"></span> EXPEDIÇÃO PELO CORPO HUMANO</p>
+    <h1 id="menuTitle">Imuno<span>Arena</span></h1>
+    <p class="lobby-lead">Sua turma na defesa<br>do organismo.</p>
+    <svg class="lobby-art" viewBox="0 0 480 270" aria-hidden="true" focusable="false">
+      <path d="M-25 211C75 88 135 246 243 128S400 14 510 95" fill="none" stroke="#163d54" stroke-width="83"/>
+      <path d="M-25 205C75 82 135 240 243 122S400 8 510 89" fill="none" stroke="#ef6b7f" stroke-width="68"/>
+      <path d="M-25 198C75 75 135 233 243 115S400 1 510 82" fill="none" stroke="#ffa3ad" stroke-width="8"/>
+      <g class="blood-float" transform="translate(87 156) rotate(-21)"><ellipse cy="8" rx="43" ry="29" fill="#a73555" stroke="#153e54" stroke-width="3"/><ellipse rx="43" ry="29" fill="#ff6477" stroke="#153e54" stroke-width="3"/><ellipse rx="22" ry="13" fill="#d4395b"/><path d="M-29-10q21-17 48-3" fill="none" stroke="#ffb0b7" stroke-width="5" stroke-linecap="round"/></g>
+      <g class="defender-float" transform="translate(276 107)"><ellipse cy="49" rx="60" ry="14" fill="#14374a" opacity=".2"/><path d="M-50-24Q-24-65 9-50Q51-52 57-13Q72 26 40 49Q8 67-25 45Q-66 29-50-24Z" fill="#c3a1ed" stroke="#163d54" stroke-width="4"/><path d="M-28-13Q-8-35 10-20Q36-14 18 12Q10 39-12 23Q-37 23-28-13" fill="#7852ac" stroke="#163d54" stroke-width="3"/><circle cx="-33" cy="22" r="6" fill="#f3ddff"/><circle cx="35" cy="5" r="5" fill="#f3ddff"/><circle cx="17" cy="36" r="4" fill="#f3ddff"/><path d="M-26-35q22-20 45-6" stroke="#f0ddff" stroke-width="6" stroke-linecap="round" fill="none"/></g>
+      <g transform="translate(390 177) rotate(15)" fill="none" stroke="#173e54" stroke-width="19" stroke-linecap="round"><path d="M0 37V-1L-28-32M0-1l28-31"/></g>
+      <g transform="translate(390 174) rotate(15)" fill="none" stroke="#ffce60" stroke-width="12" stroke-linecap="round"><path d="M0 37V-1L-28-32M0-1l28-31"/></g>
+      <g fill="#87e2d3" stroke="#173e54" stroke-width="3"><circle cx="155" cy="53" r="13"/><circle cx="185" cy="229" r="10"/><circle cx="426" cy="35" r="8"/></g>
+      <path d="M42 44v17m-8-8h16m307-23v14m-7-7h14" stroke="#ffde8a" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <div class="lobby-facts"><span><strong>8</strong> provas</span><span><strong>1</strong> turma</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 6v7c0 4-5 7-9 9-4-2-9-5-9-9V6z" fill="#ffcf69" stroke="currentColor" stroke-width="2"/></svg> Conhecimento + ação</span></div>
+    <p class="lobby-caption">Explore tecidos. Reconheça invasores.<br>Aprenda imunologia jogando.</p>
   </div>
-  <label for="playerName">Seu nome</label>
-  <input id="playerName" maxlength="24" autocomplete="nickname">
-  <p id="roomInfo" role="status">Conectando à sala…</p>
-  <p id="roomPlayers"></p>
-  <button class="bigBtn" id="startBtn" disabled>Entrar na sala</button>
-</div>
+  <div class="lobby-setup">
+    <header class="lobby-heading"><div><span class="setup-kicker">PREPARE SUA MISSÃO</span><h2>Entre na arena</h2></div><span class="lobby-step" aria-hidden="true">01</span></header>
+    <fieldset class="character-choice"><legend>Escolha seu personagem</legend>
+  <div id="chars">
+    <button class="charBtn active" data-char="male" aria-pressed="true"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v12H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#3378c8" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#3378c8" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeiro</button>
+    <button class="charBtn" data-char="female" aria-pressed="false"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v8q6 3 2 10h-5l-2-8H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#d7434b" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#d7434b" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeira</button>
+  </div>
+    </fieldset>
+    <label class="name-label" for="playerName">Como a turma vai chamar você?</label>
+    <input id="playerName" maxlength="24" autocomplete="nickname" placeholder="Seu nome na arena">
+    <div class="crew-panel"><div class="crew-heading"><strong>Equipe na sala</strong><span id="roomCount">0 participantes</span></div><p id="roomPlayers">Aguardando os primeiros exploradores.</p></div>
+    <div class="lobby-entry"><p id="roomInfo" role="status">Conectando à sala…</p><button class="bigBtn" id="startBtn" disabled>Entrar na sala</button><p class="lobby-note">Mesmo link, mesma turma. Prepare-se para oito desafios.</p></div>
+  </div>
+</section>
 
 <section id="intro" class="hidden" aria-labelledby="introTitle">
   <div class="intro-card">

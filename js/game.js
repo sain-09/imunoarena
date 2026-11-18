@@ -367,7 +367,7 @@ function updatePeers(dt) {
     if (now - peer.receivedAt > peerLifetimeMs) livePeers.delete(key);
   }
   const inPlay = activeRound && room?.phase === 'playing' && activeRound === roundKey(room) &&
-    (state.phase === 'playing' || state.phase === 'quiz');
+    (['playing','quiz','mission'].includes(state.phase));
   const peers = inPlay ? livePeers.values() : [];
   const active = new Set();
   for (const peer of peers) {
@@ -435,7 +435,10 @@ let scheduled = null;
 const altEls = [];
 
 function currentStage() { return CONFIG.stages[state.stageIndex]; }
+let missionPanel=null;
+let missionPayload=null;
 function setPhase(phase) {
+  if(phase !== 'mission') $('missionPanel').classList.add('hidden');
   state.phase = phase;
   document.body.dataset.phase = phase;
   document.body.dataset.arena = activeMap;
@@ -592,6 +595,9 @@ function startTurn() {
   player.facing = player.faceTarget = Math.PI;
   const id = currentStage().id;
   raceTime = 0;
+  missionPanel?.dispose();
+  missionPanel=null;
+  missionPayload=null;
   showMap(id);
   $('result').classList.add('hidden');
   $('hud').classList.remove('hidden');
@@ -601,6 +607,10 @@ function startTurn() {
   $('qpanel').classList.remove('station-locked','race-slow');
   $('qtext').textContent = currentStage().title;
   $('status').textContent = '';
+  if (currentStage().seconds) {
+    startMission();
+    return;
+  }
   if (id === 'targets') {
     showTargets();
     return;
@@ -626,6 +636,27 @@ function startTurn() {
     setClock(CONFIG.raceSeconds);
     state.deadline = performance.now() + room.startAt + CONFIG.raceSeconds * 1000 - classroom.now();
   }
+}
+
+function startMission() {
+  const stage=currentStage();
+  setPhase('mission');
+  $('missionPanel').classList.remove('hidden');
+  setClock(stage.seconds);
+  state.deadline=performance.now()+room.startAt+stage.seconds*1000-classroom.now();
+  missionPanel=createMissionPanel({
+    element:$('missionPanel'),stage,roomId:room.id,duration:stage.seconds,
+    elapsed:()=>Math.max(0,(classroom.now()-room.startAt)/1000),
+    symbolTexture,
+    onVisual:values=>{
+      const model=arenaModels[activeMap];
+      const effect=model?.getObjectByName('mission_feedback');
+      if(effect) {
+        effect.rotation.y+=.18;
+        effect.scale.setScalar(1+Math.min(.15,values.filter(value=>value!==null).length*.025));
+      }
+    }
+  });
 }
 
 function refreshSelection() {
@@ -703,7 +734,9 @@ function toggleCell() {
   scanCells();
 }
 function showQuiz() {
-  if (activeMap === 'targets' && classroom.now() < room.startAt + CONFIG.targetSeconds * 1000) return;
+  const activitySeconds=currentStage().seconds || (activeMap==='targets'?CONFIG.targetSeconds:0);
+  if(activitySeconds && classroom.now()<room.startAt+activitySeconds*1000)return;
+  if(missionPanel){missionPayload=missionPanel.finish();}
   clearMarkers();
   resetInput();
   setPhase('quiz');
@@ -712,6 +745,7 @@ function showQuiz() {
   $('challenge').dataset.theme = currentStage().id;
   $('challengeHelp').textContent = currentStage().id === 'race'
     ? (state.raceMs === null ? 'Tempo da corrida esgotado.' : 'Entrega concluída em ' + (state.raceMs / 1000).toFixed(2) + ' s.')
+    : currentStage().seconds ? 'Atividade prática registrada. Responda para somar até '+CONFIG.quizPoints+' pontos.'
     : 'Inspeção encerrada: ' + state.marks.size + '/' + state.targetLimit + ' marcações registradas. A inspeção vale até ' + CONFIG.practicalPoints + ' pontos e esta pergunta vale ' + CONFIG.quizPoints + '.';
   const choices = $('challengeChoices');
   choices.className = 'quizChoices';
@@ -729,8 +763,8 @@ function showQuiz() {
     choices.append(button);
   });
   setClock(CONFIG.quizSeconds);
-  if (activeMap === 'targets') {
-    state.deadline = performance.now() + room.startAt + (CONFIG.targetSeconds + CONFIG.quizSeconds) * 1000 - classroom.now();
+  if (activitySeconds) {
+    state.deadline = performance.now() + room.startAt + (activitySeconds + CONFIG.quizSeconds) * 1000 - classroom.now();
     updateClock(performance.now());
   }
 }
@@ -738,7 +772,7 @@ function showQuiz() {
 function finishAttempt(answer) {
   resetInput();
   waitForScores();
-  classroom.submit({ answer, selectedAt: state.selectedAt, raceMs: state.raceMs, marks: [...state.marks] });
+  classroom.submit({ answer, selectedAt: state.selectedAt, raceMs: state.raceMs, marks: [...state.marks], mission:missionPayload });
 }
 
 function total(competitor) {
@@ -779,12 +813,13 @@ function showStandings(stage) {
     const detail = stage.id === 'race' ? (entry.place ? entry.place + 'º · ' + (entry.raceMs / 1000).toFixed(2) + ' s · ' : 'Sem chegada · ') : '';
     const score = stage.id === 'factory' ? entry.quiz + ' pela estação' : entry.practical + ' na prova + ' + entry.quiz + ' na pergunta';
     const report = entry.inspection;
+    const activity = entry.missionDetail ? ' · '+entry.missionDetail : '';
     const inspection = stage.id === 'targets' && report
       ? ' · ' + report.hits + ' acertos, ' + report.errors + ' saudáveis marcadas, ' + report.missed + ' alvos restantes'
       : '';
     line.textContent = competitor.name + ' · ' + total(competitor) + ' pontos';
     const breakdown = document.createElement('small');
-    breakdown.textContent = detail + score + ' · Resposta ' + (entry.answer || 'em branco') + inspection;
+    breakdown.textContent = detail + score + ' · Resposta ' + (entry.answer || 'em branco') + inspection + activity;
     board.append(line, breakdown);
   }
   $('againBtn').textContent = final ? 'Abrir novo campeonato' : 'Próxima prova';
@@ -1039,6 +1074,10 @@ function frame() {
     } else {
       showQuiz();
     }
+  } else if (state.phase === 'mission') {
+    updateClock(nowMs);
+    missionPanel?.update();
+    if(state.remaining<=0)showQuiz();
   } else if (state.phase === 'quiz') {
     updateClock(nowMs);
     if (state.remaining <= 0) {
@@ -1143,7 +1182,7 @@ $('againBtn').addEventListener('click', () => {
 $('scanCell').addEventListener('click', toggleCell);
 window.addEventListener('keydown', event => { if(event.code === 'KeyE' && !event.repeat) toggleCell(); });
 classroom.setPositionSource(() => {
-  if (!activeRound || !['playing','quiz'].includes(state.phase)) return null;
+  if (!activeRound || !['playing','quiz','mission'].includes(state.phase)) return null;
   return { round:activeRound, x:player.x, z:player.z, facing:player.facing, char:state.charId };
 });
 requestAnimationFrame(frame);

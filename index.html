@@ -26,7 +26,7 @@
 
 <div id="menu" class="card">
   <h1>ImunoArena</h1>
-  <p>Entre na sala da turma para disputar as três provas no seu celular.</p>
+  <p>Entre na sala da turma para disputar as oito provas no seu celular.</p>
   <div id="chars">
     <button class="charBtn active" data-char="male"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v12H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#3378c8" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#3378c8" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeiro</button>
     <button class="charBtn" data-char="female"><svg class="medic-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 10h18v8q6 3 2 10h-5l-2-8H7z" fill="#573644"/><path d="M7 30c0-8 18-8 18 0" fill="#fff3e7" stroke="#d7434b" stroke-width="2"/><ellipse cx="16" cy="18" rx="8" ry="8" fill="#ffc08d"/><path d="M6 14l2-8q8-5 16 0l2 8z" fill="#fff4ef" stroke="#56425b" stroke-width="1.5"/><path d="M16 6v6m-3-3h6" stroke="#d7434b" stroke-width="2.2"/><path d="M12 17v2m8-2v2m-7 3q3 3 6 0" fill="none" stroke="#573644" stroke-width="1.6" stroke-linecap="round"/></svg>Enfermeira</button>
@@ -48,6 +48,8 @@
     <div class="intro-footer"><span>Largada em <strong id="introCount"></strong></span><div class="intro-track"><div id="introBar"></div></div></div>
   </div>
 </section>
+
+<section id="missionPanel" class="card hidden" aria-label="Atividade prática"></section>
 
 <section id="challenge" class="card hidden" aria-labelledby="challengeTitle">
   <h2 id="challengeTitle"></h2>
@@ -81,6 +83,8 @@
 <script src="js/classroom.js"></script>
 <script src="js/arenas.js"></script>
 <script src="js/targets.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/mission-panel.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

@@ -21,6 +21,15 @@ Cada prova começa com uma largada sincronizada de cinco segundos, com o objetiv
 2. **Corrida da hemácia.** Leve oxigênio até o músculo contornando as fileiras de hemácias e cruzando os bloqueios móveis. As três primeiras colocações valem 700, 500 e 300. Os demais que concluírem ganham 100. Tempos iguais recebem a mesma colocação. A pergunta vale 300.
 3. **Alvo infectado.** Toque nas células com o fragmento indicado. Explore o recife com o joystick e use Marcar célula ao se aproximar de um alvo. A amostra de 20 células varia a cada campeonato e é igual para toda a turma. Você pode manter até sete marcações e desfazê-las para trocar. A pergunta abre automaticamente após os 44 segundos de inspeção, com 15 segundos para responder. Cada marcação incorreta anula um acerto. A prática vale até 700 e a pergunta vale 300.
 
+4. **Patrulha em alerta.** Reparta três leucócitos entre pele, pulmão e intestino. Cinco ondas mostram ameaças diferentes. A distribuição é registrada ao fim de cada onda. A prática vale até 700 pela melhor contenção possível com os três patrulheiros.
+5. **Primeira linha.** Toque em dois cartões para trocar suas posições e ordenar os acontecimentos da entrada de um agente por um corte na pele.
+6. **Escola da imunidade.** Conecte cada etapa da vacinação ao seu efeito seguinte, chegando à formação de memória e à resposta no reencontro.
+7. **Vaso em alerta.** Ajuste fluxo sanguíneo, permeabilidade e mediadores em um painel de simulação para reproduzir o padrão de tecido inflamado mostrado como referência.
+8. **O invasor voltou.** Memorize a assinatura nos primeiros cinco segundos. Depois identifique, em seis encontros, se o agente é o mesmo ou é diferente.
+
+As fases 4–8 têm cenários GLB próprios e controles por toque em painéis de atividade. A atividade termina automaticamente no prazo compartilhado e abre a pergunta por 15 segundos. Cada uma vale até 700 pela prática e mais 300 pela resposta, com total máximo de 8.000 no campeonato. Os sinais usados na simulação de inflamação são representações didáticas.
+
+
 O joystick aparece nas provas com movimentação. WASD e setas também funcionam. As perguntas, os tempos e os valores podem ser editados em js/config.js.
 
 As corridas têm largada comum e a classificação usa o tempo de cada jogador. Os avatares dos colegas aparecem no cenário com atualização periódica e movimento interpolado. O contato entre jogadores não bloqueia o movimento. Ela foi feita para uma turma de confiança: o servidor calcula os pontos, usando os tempos de corrida e de entrada na estação registrados pelos celulares.

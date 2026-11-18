@@ -1,5 +1,6 @@
 const { randomUUID } = require('node:crypto');
 const { makeTargetPuzzle } = require('../js/targets.js');
+const { scoreMission } = require('../js/missions.js');
 const config = require('../js/config.js');
 const { rankRace, scoreTargets } = require('../js/scoring.js');
 
@@ -7,7 +8,8 @@ const empty = () => ({
   id: randomUUID(), host: null, phase: 'lobby', stage: 0, players: [],
   submissions: {}, startAt: null, closeAt: null
 });
-const secondsFor = [config.roundSeconds, config.raceSeconds + config.quizSeconds, config.targetSeconds + config.quizSeconds];
+const secondsFor=config.stages.map(stage=>stage.id==='factory'?config.roundSeconds:
+ (stage.seconds || (stage.id==='race'?config.raceSeconds:config.targetSeconds))+config.quizSeconds);
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
 function launch(room, now) {
@@ -43,11 +45,12 @@ function submit(room, id, body, now) {
   if (room.phase !== 'playing' || body.stage !== room.stage || now < room.startAt || now >= room.closeAt) return false;
   if (!room.players.some(p => p.id === id) || room.submissions[id]) return false;
   const stage = config.stages[room.stage];
-  if (stage.id === 'targets' && now < room.startAt + config.targetSeconds * 1000) {
-    throw fail(409, 'Aguarde o fim da inspeção para responder.');
+  const activitySeconds = stage.seconds || (stage.id==='targets'?config.targetSeconds:0);
+  if (activitySeconds && now < room.startAt + activitySeconds * 1000) {
+    throw fail(409, 'Aguarde o fim da atividade prática para responder.');
   }
   const answer = ['A','B','C','D','E'].includes(body.answer) ? body.answer : null;
-  const withinQuiz = stage.id !== 'targets' || now < room.startAt + (config.targetSeconds + config.quizSeconds) * 1000;
+  const withinQuiz = !activitySeconds || now < room.startAt + (activitySeconds + config.quizSeconds) * 1000;
   const correct = withinQuiz && answer === stage.correct;
   const result = { answer:withinQuiz ? answer : null, raceMs: null, place: null, practical: 0, quiz: correct ? config.quizPoints : 0 };
   if (stage.id === 'factory') {
@@ -65,6 +68,11 @@ function submit(room, id, body, now) {
     const hits = [...marked].filter(index => infected.has(index)).length;
     result.inspection = { hits, errors:marked.size-hits, missed:infected.size-hits };
     result.practical = scoreTargets(marked, infected, config.practicalPoints);
+  }
+  if(stage.seconds){
+    const mission=scoreMission(stage.id,room.id,body.mission,config.practicalPoints);
+    result.practical=mission.points;
+    result.missionDetail=mission.detail;
   }
   room.submissions[id] = result;
   return true;

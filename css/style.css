@@ -282,3 +282,39 @@
 #qpanel.station-locked { border-color:#b77923; background:#fff3cb; }
 #qpanel.race-slow { border-color:#bf5f37; }
 #fieldActions #scanCell { min-height:52px; min-width:126px; }
+
+#missionPanel { position:fixed; z-index:4; left:50%; top:54%; transform:translate(-50%,-50%); width:min(94vw,650px); max-height:75dvh; overflow:auto; background:#fff1d3; border:3px solid #46304e; box-shadow:0 5px #46304e; padding:12px 16px; }
+#missionPanel h2 { margin:0 0 6px; color:#573767; font-size:clamp(19px,4vw,27px); }
+#missionPanel p { margin:5px 0 10px; font-size:14px; }
+.mission-content { display:grid; gap:9px; }
+.mission-label { font-weight:800; }
+.mission-status { font-weight:800; color:#3d625b; }
+#missionPanel button, #missionPanel select { font:inherit; border:2px solid #775582; border-radius:9px; background:#fffbeb; color:#392b47; min-height:44px; padding:7px 10px; }
+#missionPanel button:disabled { opacity:.5; }
+#missionPanel button[aria-pressed="true"] { background:#f6ce79; }
+.mission-controls { display:flex; gap:6px; flex-wrap:wrap; }
+.patrol-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+.patrol-region { padding:8px; border-radius:12px; background:#e5efdf; border:1px solid #97b4a2; }
+.sequence-list, .vaccine-links { display:grid; gap:8px; }
+.sequence-list button { text-align:left; }
+.vaccine-links label { display:grid; grid-template-columns:1fr 1.2fr; gap:8px; align-items:center; font-size:14px; font-weight:700; }
+.mission-symbol { display:block; width:80px; height:80px; margin:0 auto; }
+.inflammation-board { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.inflammation-board > div { padding:8px; border-radius:12px; background:#f8ced4; border:1px solid #c88d9e; }
+.tissue-vessel { height:22px; background:#833653; border-radius:12px; overflow:hidden; }
+.tissue-flow { background:#f74763; height:100%; border-radius:12px; transition:width .2s; }
+.tissue-swelling { background:#f27caa; border-radius:0 0 50% 50%; margin:3px 14px; transition:height .2s; }
+.tissue-mediators { display:flex; justify-content:center; gap:4px; height:10px; }
+.tissue-mediators span { display:block; background:#a73c8f; border-radius:50%; width:6px; height:6px; }
+.mission-slider { display:grid; grid-template-columns:1fr 1.3fr 30px; gap:8px; align-items:center; font-size:13px; font-weight:700; }
+.mission-slider input { width:100%; min-height:40px; accent-color:#b15c9e; }
+body[data-phase="mission"] #qpanel { display:none; }
+@media(orientation:landscape) and (max-height:560px) {
+ #missionPanel { top:53%; max-height:80dvh; width:min(86vw,720px); padding:8px 12px; }
+ #missionPanel p { font-size:12px; margin:4px 0 7px; }
+ .sequence-list { grid-template-columns:1fr 1fr; }
+ .vaccine-links { grid-template-columns:1fr 1fr; }
+ .vaccine-links label { grid-template-columns:1fr; }
+ .vaccine-links select { font-size:12px!important; }
+ .mission-symbol { width:64px; height:64px; }
+}

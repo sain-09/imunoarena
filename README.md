@@ -56,6 +56,14 @@ Referências: [TURN e bloqueios de rede](https://developers.cloudflare.com/realt
 
 ### Verificação
 
-`npm test` executa simulações de 2, 8 e 40 jogadores, troca pelas oito fases, reconexão, descarte de duplicatas, negociação ICE e emissão de credenciais TURN temporárias. Os testes não medem a latência real nem o desempenho gráfico dos celulares. Depois de publicar uma mudança no protocolo, todos devem recarregar a página antes de entrar na sala. Teste com dois celulares e depois com a turma, tanto na mesma rede quanto entre Wi-Fi e dados móveis.
+`npm test` executa simulações de 2, 8 e 40 jogadores, troca pelas oito fases, reconexão, descarte de duplicatas, negociação ICE e emissão de credenciais TURN temporárias. Também verifica os dez modelos GLB, os pivôs das animações, os limites de geometria e o cache de cenários. Os testes não medem a latência real nem o desempenho gráfico dos celulares. Depois de publicar uma mudança no protocolo, todos devem recarregar a página antes de entrar na sala. Teste com dois celulares e depois com a turma, tanto na mesma rede quanto entre Wi-Fi e dados móveis.
+
+### Modelos e memória
+
+Os oito mapas usam aproximadamente 1,04 milhão de triângulos somados, uma redução de 72% em relação aos modelos anteriores. As texturas incorporadas dos cenários foram mantidas. Cada mapa tem entre 77 e 152 mil triângulos, e os oito arquivos somam cerca de 38,3 MiB, antes eram 95,5 MiB.
+
+Os personagens têm cerca de 16 mil triângulos cada e cinco malhas por personagem, com uma paleta de materiais em atlas. Braços e pernas continuam em pivôs independentes para caminhada e comemoração. As instâncias compartilham geometria e materiais; os colegas não geram passagens extras de sombra.
+
+O cache mantém no máximo dois cenários carregados. No resultado de cada prova, ele prepara o próximo mapa; os mais antigos têm geometria, materiais, texturas e imagens liberados. Se um cenário for necessário novamente, ele é recarregado. Em telas com controle por toque, a densidade do canvas 3D fica limitada a 1,5, sem reduzir a resolução dos textos e botões HTML.
 
 Os cenários das provas 4–8 usam plantas e objetos próprios. Patrulha reúne três tecidos, Primeira Linha mostra um corte em camadas da pele, Vacinação usa um pavilhão hexagonal, Inflamação mostra uma janela do vaso e Memória usa um arquivo circular de reconhecimento.

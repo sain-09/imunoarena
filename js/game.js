@@ -40,7 +40,7 @@ try {
   return;
 }
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.matchMedia('(pointer: coarse)').matches?1.5:2));
 renderer.shadowMap.enabled = true;
 
 const scene = new THREE.Scene();
@@ -187,11 +187,20 @@ function buildCharacter(id) {
   return g;
 }
 
-function disposeGroup(g) {
+function disposeGroup(g, disposeTextures = false) {
+  const geometries=new Set(),materials=new Set(),textures=new Set(),images=new Set();
   g.traverse(o => {
-    if (o.geometry) o.geometry.dispose();
-    if (o.material) o.material.dispose();
+    if(o.geometry)geometries.add(o.geometry);
+    for(const material of Array.isArray(o.material)?o.material:[o.material]) {
+      if(!material)continue;
+      materials.add(material);
+      if(disposeTextures)for(const value of Object.values(material))if(value?.isTexture)textures.add(value);
+    }
   });
+  for(const geometry of geometries)geometry.dispose();
+  for(const material of materials)material.dispose();
+  for(const texture of textures){if(texture.image)images.add(texture.image);texture.dispose();}
+  for(const image of images)if(typeof image.close==='function')image.close();
 }
 
 /* =====================================================================
@@ -304,7 +313,6 @@ raceAvatar.userData.racer = true;
 scene.add(raceAvatar);
 raceAvatar.visible = false;
 const arenaModels = {};
-const arenaLoads = new Map();
 let activeMap = 'factory';
 let mapReady = false;
 let markers = [];
@@ -314,31 +322,32 @@ const livePeers = new Map();
 const peerLifetimeMs = 6000;
 let activeRound = null;
 let memoryVisual = null;
+const arenaCache=createArenaCache({
+  models:arenaModels,active:()=>activeMap,limit:2,
+  load:async id=>{
+    const gltf=await new THREE.GLTFLoader().loadAsync('models/'+id+'.glb');
+    if(id==='inflammation')prepareInflammation(gltf.scene);
+    if(id==='memory')prepareMemory(gltf.scene);
+    return gltf.scene;
+  },
+  attach:(model,id)=>{model.visible=activeMap===id;scene.add(model);},
+  release:model=>{
+    scene.remove(model);disposeGroup(model,true);
+    renderer.renderLists?.dispose();
+  }
+});
 function roundKey(snapshot) {
   return snapshot.id + '/' + snapshot.stage;
 }
 
 function loadArena(id) {
-  if (!arenaLoads.has(id)) {
-    const loader = new THREE.GLTFLoader();
-    arenaLoads.set(id, loader.loadAsync('models/' + id + '.glb').then(gltf => {
-      const model = gltf.scene;
-      if(id === 'inflammation') prepareInflammation(model);
-      if(id === 'memory') prepareMemory(model);
-      model.visible = activeMap === id;
-      scene.add(model);
-      arenaModels[id] = model;
-      return model;
-    }).catch(error => {
-      arenaLoads.delete(id);
-      throw error;
-    }));
-  }
-  return arenaLoads.get(id);
+  return arenaCache.get(id);
 }
 
 function showMap(id) {
   activeMap = id;
+  arenaCache.touch(id);
+  if(!arenaModels[id])loadArena(id).catch(()=>{});
   for (const [key, group] of Object.entries(arenaModels)) group.visible = key === id;
   const palette = ARENAS[id];
   scene.background = new THREE.Color(palette.tint);
@@ -459,6 +468,7 @@ function updatePeers(dt) {
     }
     if (!avatar) {
       const group = activeMap === 'race' ? raceAvatar.clone(true) : buildCharacter(peer.char);
+      group.traverse?.(part=>{if(part.isMesh)part.castShadow=false;});
       const name = new THREE.Sprite(new THREE.SpriteMaterial({
         map: canvasTexture(256,(ctx,size) => {
           ctx.fillStyle = '#30243f'; ctx.fillRect(8,90,240,76);
@@ -474,7 +484,7 @@ function updatePeers(dt) {
       scene.add(group);
       avatar = {group,name,arena:activeMap};
       remoteAvatars.set(peer.key,avatar);
-      if(activeMap !== 'race') characterModels.load(peer.char).then(model => {
+      if(activeMap !== 'race') characterModels.load(peer.char,{castShadow:false}).then(model => {
         if(!model || remoteAvatars.get(peer.key) !== avatar) return;
         const fallback=group.userData.body;
         group.remove(fallback); disposeGroup(fallback);
@@ -876,6 +886,7 @@ function showStandings(stage) {
   $('result').classList.remove('hidden');
   showMap(stage.id);
   const final = state.stageIndex === CONFIG.stages.length - 1;
+  if(!final)loadArena(CONFIG.stages[state.stageIndex+1].id).catch(()=>{});
   const me = room.players.find(competitor => competitor.me);
   const entry = me?.results[state.stageIndex];
   const winner = me && total(me) > 0 && room.players.every(competitor => total(me) >= total(competitor));

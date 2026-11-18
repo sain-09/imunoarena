@@ -4,7 +4,7 @@ function createCharacterModels(three, paths) {
   const requests = new Map();
   const loader = three.GLTFLoader ? new three.GLTFLoader() : null;
 
-  async function load(id) {
+  async function load(id, {castShadow=true} = {}) {
     if (!loader || !paths[id]) return null;
     if (!requests.has(id)) {
       requests.set(id, new Promise(resolve => {
@@ -32,7 +32,10 @@ function createCharacterModels(three, paths) {
       }));
     }
     const template = await requests.get(id);
-    return template ? template.clone(true) : null;
+    if(!template)return null;
+    const instance=template.clone(true);
+    instance.traverse(part=>{if(part.isMesh)part.castShadow=castShadow;});
+    return instance;
   }
 
   return { load };
